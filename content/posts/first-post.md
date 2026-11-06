@@ -12,7 +12,7 @@ Replace this text with your own writing, update the title and date above, and se
 
 ## A section
 
-You can write in English, 中文, or both. Markdown supports **bold text**, *italics*, [links](https://github.com/Eabo-X), lists, images, and code blocks.
+Write your post in English. Markdown supports **bold text**, *italics*, [links](https://github.com/Eabo-X), lists, images, and code blocks.
 
 ```python
 print("Hello, world!")

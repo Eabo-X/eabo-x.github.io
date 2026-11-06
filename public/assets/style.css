@@ -27,7 +27,7 @@ main:focus { outline: none; }
 .site-header { min-height: 126px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .wordmark { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-family: "Avenir Next", var(--sans); font-size: 27px; font-weight: 700; letter-spacing: -.9px; white-space: nowrap; }
 .wordmark-logo { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border: 1px solid #cbd0c9; border-radius: 9px; background: var(--paper); }
-.wordmark-logo img { display: block; width: 32px; height: 32px; }
+.wordmark-logo svg { display: block; width: 32px; height: 32px; }
 .main-nav { display: flex; gap: 31px; }
 .main-nav a { position: relative; display: flex; align-items: center; min-height: 44px; font-size: 14px; color: var(--muted); transition: color 160ms ease; }
 .main-nav a:hover, .main-nav a[aria-current] { color: var(--ink); }
@@ -141,7 +141,7 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
   .site-header { min-height: 100px; gap: 16px; }
   .wordmark { font-size: 24px; }
   .wordmark-logo { width: 32px; height: 32px; border-radius: 8px; }
-  .wordmark-logo img { width: 28px; height: 28px; }
+  .wordmark-logo svg { width: 28px; height: 28px; }
   .main-nav { gap: 23px; }
   .main-nav a { font-size: 13px; }
   main { padding-top: 64px; padding-bottom: 65px; }
