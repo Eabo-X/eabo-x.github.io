@@ -123,6 +123,7 @@ function mountBackground(canvas) {
   resize();
   syncPlayback();
   window.addEventListener('resize', resize, { passive: true });
+  window.addEventListener('themechange', resize);
   document.addEventListener('visibilitychange', syncPlayback);
   reducedMotion.addEventListener('change', syncPlayback);
 }

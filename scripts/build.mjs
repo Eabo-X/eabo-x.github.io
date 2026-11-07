@@ -1,6 +1,7 @@
 import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { marked } from 'marked';
 import matter from 'gray-matter';
 
@@ -32,14 +33,14 @@ function renderSocials(socials = {}) {
   }).join('');
 }
 
-function shell(config, logo, { title, description, route = '/', active = 'about', body, pageClass = '' }) {
+function shell(config, logo, assetURLs, { title, description, route = '/', active = 'about', body, pageClass = '' }) {
   const canonical = new URL(route, config.url).href;
   return `<!doctype html>
 <html lang="${escape(config.language || 'en')}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="light dark">
   <title>${escape(title)}</title>
   <meta name="description" content="${escape(description || config.description)}">
   <link rel="canonical" href="${escape(canonical)}">
@@ -52,16 +53,23 @@ function shell(config, logo, { title, description, route = '/', active = 'about'
   <link rel="icon" href="/assets/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="icon" href="/assets/favicon.svg?v=2" type="image/svg+xml" sizes="any">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
-  <link rel="stylesheet" href="/assets/style.css">
-  <script type="module" src="/assets/pythagoras.js"></script>
-  ${pageClass === 'about-page' ? '<script type="module" src="/assets/typewriter.js"></script>' : ''}
+  <script src="${assetURLs['theme.js']}"></script>
+  <link rel="stylesheet" href="${assetURLs['style.css']}">
+  <script type="module" src="${assetURLs['pythagoras.js']}"></script>
+  ${pageClass === 'about-page' ? `<script type="module" src="${assetURLs['typewriter.js']}"></script>` : ''}
 </head>
 <body>
   <canvas id="pythagoras-background" class="geometry-background" aria-hidden="true"></canvas>
   <a class="skip-link" href="#main">Skip to content</a>
   <div class="site-shell">
     <header class="site-header">
-      <a class="wordmark" href="/" aria-label="${escape(config.name)} home"><span class="wordmark-logo" aria-hidden="true">${logo}</span><span>${escape(config.name)}</span></a>
+      <div class="site-brand">
+        <a class="wordmark" href="/" aria-label="${escape(config.name)} home"><span class="wordmark-logo" aria-hidden="true">${logo}</span><span>${escape(config.name)}</span></a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Switch to dark mode" hidden>
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 14.1A8.7 8.7 0 0 1 9.9 3.2 8.7 8.7 0 1 0 20.8 14.1Z"/></svg>
+        </button>
+      </div>
       <nav class="main-nav" aria-label="Main navigation">
         <a href="/"${active === 'about' ? ' aria-current="page"' : ''}>About me</a>
         <a href="/blog/"${active === 'blog' ? ' aria-current="page"' : ''}>Blog</a>
@@ -125,6 +133,13 @@ export async function buildSite({ quiet = false } = {}) {
   const config = JSON.parse(await readFile(path.join(root, 'site.config.json'), 'utf8'));
   if (!config.name || !config.url) throw new Error('site.config.json requires name and url.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.email || '')) throw new Error('site.config.json requires a valid email.');
+  const assetURLs = Object.fromEntries(await Promise.all(
+    ['style.css', 'theme.js', 'pythagoras.js', 'typewriter.js'].map(async (file) => {
+      const content = await readFile(path.join(root, 'public/assets', file));
+      const version = createHash('sha256').update(content).digest('hex').slice(0, 12);
+      return [file, `/assets/${file}?v=${version}`];
+    }),
+  ));
   // Keep the original logo paths as vectors at every display density.
   const logo = (await readFile(path.join(root, 'public/assets/eabo-x-logo.svg'), 'utf8')).trim()
     .replace(/<svg\b[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="32" height="32" aria-hidden="true" focusable="false" shape-rendering="geometricPrecision">');
@@ -134,7 +149,7 @@ export async function buildSite({ quiet = false } = {}) {
   const greetings = [`Hi, I’m ${config.name} 😊`, '👋 Glad to meet you!'];
   const pages = new Map();
 
-  pages.set('index.html', shell(config, logo, {
+  pages.set('index.html', shell(config, logo, assetURLs, {
     title: `${config.name} — About me`, pageClass: 'about-page',
     body: `
       <section class="intro" aria-labelledby="intro-title">
@@ -162,7 +177,7 @@ export async function buildSite({ quiet = false } = {}) {
         <time datetime="${post.date}">${post.date}</time>
         <span class="post-title">${escape(post.title)}</span>
       </a></li>`).join('')}</ol>` : '<p class="blog-empty">No posts yet.</p>';
-    pages.set(`${route.slice(1)}index.html`, shell(config, logo, {
+    pages.set(`${route.slice(1)}index.html`, shell(config, logo, assetURLs, {
       title: `${selectedCategory ? `${selectedCategory} — Blog` : 'Blog'} — ${config.name}`,
       route, active: 'blog', pageClass: 'blog-page',
       description: `${selectedCategory ? `${selectedCategory} notes` : 'Notes, ideas, and writing'} by ${config.name}.`,
@@ -175,7 +190,7 @@ export async function buildSite({ quiet = false } = {}) {
   }
 
   for (const post of posts) {
-    pages.set(`blog/${post.slug}/index.html`, shell(config, logo, {
+    pages.set(`blog/${post.slug}/index.html`, shell(config, logo, assetURLs, {
       title: `${post.title} — ${config.name}`, description: post.description,
       route: post.route, active: 'blog', pageClass: 'post-page',
       body: `<a class="back-link" href="/blog/">${arrow}All posts</a>
@@ -196,7 +211,7 @@ export async function buildSite({ quiet = false } = {}) {
     { label: 'X', emoji: '💬', value: profileHandle(config.socials?.twitter), href: config.socials?.twitter },
     { label: 'GitHub', emoji: '🐙', value: profileHandle(config.socials?.github), href: config.socials?.github },
   ].filter((link) => link.href);
-  pages.set('contact/index.html', shell(config, logo, {
+  pages.set('contact/index.html', shell(config, logo, assetURLs, {
     title: `Contact — ${config.name}`, route: '/contact/', active: '', pageClass: 'contact-page',
     description: `Contact ${config.name} by email.`,
     body: `<section class="contact-intro" aria-labelledby="contact-title">
@@ -211,7 +226,7 @@ export async function buildSite({ quiet = false } = {}) {
     </section>`,
   }));
 
-  pages.set('404.html', shell(config, logo, {
+  pages.set('404.html', shell(config, logo, assetURLs, {
     title: `Page not found — ${config.name}`, route: '/404.html', active: '', pageClass: 'not-found-page',
     body: `<p class="eyebrow">404</p><h1>A little off track<span class="accent">.</span></h1><p class="page-description">This page doesn’t seem to be here.</p><a class="text-link" href="/">Back to About me ${arrow}</a>`,
   }));
