@@ -189,7 +189,9 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
 .article-header h1 { font-family: var(--blog-serif); font-size: 28px; font-weight: 400; letter-spacing: -.25px; line-height: 1.4; margin: 12px 0 0; overflow-wrap: anywhere; }
 .article-body { max-width: 650px; font-size: 17px; line-height: 1.65; }
 .article-body.prose p { margin-bottom: 1em; }
-.article-body.prose :is(h1, h2, h3) { font-family: var(--blog-serif); font-weight: 400; }
+.article-body.prose :is(h1, h2, h3) { font-family: var(--blog-serif); font-weight: 600; }
+.article-body.prose h2 { font-size: 22px; }
+.article-body.prose h3 { font-size: 19px; }
 .article-body strong { font-weight: 600; }
 .prose { overflow-wrap: anywhere; }
 .prose p { margin-bottom: 1.3em; }

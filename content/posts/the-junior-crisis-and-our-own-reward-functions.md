@@ -11,6 +11,8 @@ Measured by that day’s output, the afternoon is hard to justify. Others have a
 
 This is also where I start in thinking about the Junior Crisis. It makes people rethink the first job, and it confronts those still in school with an earlier question: how much do the standards we use today to judge our own progress still overlap with the ability to create value in the future?
 
+## How the Junior Crisis Reshapes the Start of a Career
+
 The Junior Crisis describes a phenomenon in some industries: demand for entry-level roles is shrinking, squeezing the path by which newcomers enter a profession and build experience.
 
 Many professions used to offer a fairly clear path of growth. Newcomers started by writing first drafts, organizing materials and handling simple tickets, received feedback as they finished tasks, and gradually took on more complex responsibilities. The company got output; the newcomer got an income and experience.
@@ -23,7 +25,11 @@ What concerns me is that entry-level jobs carry the function of training the nex
 
 This is hard for any single firm to solve. Most of what newcomers learn in a first job is general skill they can take with them. Becker pointed out long ago that firms are unwilling to pay for such skills, because the returns to training leave with the worker; and if newcomers cannot share the cost by accepting lower wages, training will be undersupplied. AI lowers a newcomer’s short-term output value and sharpens this old problem: each firm, on its own, has a reason to hire one fewer junior, and in aggregate the whole industry ends up with fewer future seniors.
 
+## One Mismatch, Two Sources
+
 A mismatch is opening up between what students are optimizing and what the future market will value. It has two sources: the market is repricing skills, and school evaluation shapes where we spend our time. The two look independent, but they point to the same mechanism.
+
+### The Market Is Repricing Skills
 
 AI training has reached deep into professional work. Mercor’s public data catalog lists expert tasks in finance, law, consulting and other fields, along with expert-built grading rubrics, reference solutions and environments designed around real workflows. How professional knowledge is used, and what counts as a good result, are being turned into training material in ever finer detail. In other words, experts are writing “what counts as good” into rewards. [Mercor](https://www.mercor.com/apex/off-the-shelf-data/)
 
@@ -34,6 +40,8 @@ A person’s ability can keep growing while its relative scarcity keeps falling.
 The market will also create new demand. When some things become cheap, small projects that were once unaffordable become worth doing. Which roles shrink and which opportunities grow depends on how demand responds, and on what people can contribute in new ways of working.
 
 So I weigh “being able to master a skill in the future” together with “someone being willing to pay for that skill in the future”. When choosing what to learn, I need to estimate how the relationship between the two will change.
+
+### School Evaluation Shapes Where Our Time Goes
 
 Running in parallel with market change is another set of forces: the evaluations we receive every day.
 
@@ -51,7 +59,11 @@ So the human position is shifting: from optimizing a given reward toward definin
 
 The Junior Crisis also makes this mismatch harder to detect and correct. With fewer entry-level openings, students have fewer chances to meet real users, see how organizations actually run and get feedback on real work. It becomes harder for them to estimate what their abilities can actually contribute, and they lean more on visible signals like grades and CVs. The practical experience that could have helped people correct course becomes scarcer. It is like an agent that has lost access to its environment and can only keep optimizing a proxy reward on offline data: the more it optimizes, the harder the bias is to detect.
 
+## How I Want to Build My Own Reward Function
+
 In this environment, I want to take more responsibility for judging how I spend my time. School evaluation, signals from the job market and the paths others have taken are all worth consulting. I also need to use my own experience to check how closely those signals relate to what I actually want to achieve. If the human position is shifting toward defining rewards, then defining a reward function for yourself is itself practice in that skill.
+
+### First: Think About What Will Still Be Worth Investing In
 
 I separate two questions. One is how large a marginal gain AI gives me. The other is, once AI is universally available, how much my involvement can still improve the outcome.
 
@@ -60,6 +72,8 @@ I consider the second question alongside future demand, focusing on problems tha
 I pay attention to places where a person’s concrete understanding and involvement still clearly change the outcome. Their value has to be tested in real tasks. Someone with “good judgment” should be able to say which decision their judgment changed, and what result it led to.
 
 There is also an opportunity cost. Spending a hundred hours getting better at an operation that tools will soon make universal builds up something completely different from spending the same time understanding a long-standing problem in an industry. Before investing, I want my own view of that difference, and to keep revising it as new information comes in.
+
+### Second: Accumulate Experience Together With the Conditions It Holds Under
 
 AI changes many of the conditions under which things get done, and with them the range over which some experience applies.
 
@@ -70,6 +84,8 @@ So I want to make more attempts that get real feedback. Before doing something, 
 My own experience needs the same treatment. A success may include luck; a failure may come from local execution. How far a piece of experience generalizes needs to keep being checked under different conditions.
 
 For me, that is exactly the value of first-hand experience: it gives my judgments about markets, technology and people a chance to be corrected by reality.
+
+### Third: Make Time for the Things That Look Dumb
 
 Even when AI can produce results quickly, I still set aside some time for things that look a bit “dumb”.
 
@@ -87,6 +103,8 @@ Learning during delivery deserves separate attention. In a randomized controlled
 
 These investments help me understand later tools and problems faster, and leave room for future choices. Part of the reason is also simple: I genuinely want to know why it works the way it does. My own reward function can leave room for that curiosity.
 
+### Fourth: Build Connections With Different People
+
 AI lets individuals do more, and also makes many practices easier to spread.
 
 If an advantage comes mainly from using the same model or mastering an easily copied set of operations, others will soon catch up. The next generation of models may also turn work that needs skill today into a default feature. Even as individual output rises dramatically, sustained excess returns still face competition.
@@ -100,6 +118,8 @@ Imagine several people discussing the same AI customer-service product. The engi
 I hope to talk more with people of different ages, professions and views. We can discuss technology, and also what stability, fairness and success mean. Behind each person’s judgments there may be constraints and costs I have not yet experienced.
 
 Long-term conversation also builds trust, which makes people willing to share real difficulties, give feedback and try something together. These relationships also shape what I want to do. After understanding more people’s lives, I may reconsider which problems are worth my time.
+
+## Reconnecting Learning to the Real World
 
 The future I hope to see is one where students encounter complete problems earlier, with enough guidance and feedback.
 
