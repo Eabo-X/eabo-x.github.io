@@ -169,6 +169,10 @@ export async function buildSite({ quiet = false } = {}) {
   for (const selectedCategory of [null, ...categories]) {
     const route = selectedCategory ? categoryRoute(selectedCategory) : '/blog/';
     const visiblePosts = selectedCategory ? posts.filter((post) => post.category === selectedCategory) : posts;
+    const categoryNav = `<nav class="category-nav" aria-label="Post categories">${categories.map((category) => `
+      <a class="category-link category-${category}" href="${categoryRoute(category)}"${category === selectedCategory ? ' aria-current="page"' : ''}>
+        <span class="category-swatch" aria-hidden="true"></span><span>${category}</span>
+      </a>`).join('')}</nav>`;
     const postList = visiblePosts.length ? `<ol class="post-list">${visiblePosts.map((post) => `
       <li class="post-row category-${post.category}">
         <a class="post-category" href="${categoryRoute(post.category)}"${post.category === selectedCategory ? ' aria-current="page"' : ''}><span class="post-category-name">${post.category}</span></a>
@@ -181,8 +185,8 @@ export async function buildSite({ quiet = false } = {}) {
       description: `${selectedCategory ? `${selectedCategory} notes` : 'Notes, ideas, and writing'} by ${config.name}.`,
       body: `<h1 class="sr-only" id="blog-title">${selectedCategory || 'Blog'}</h1>
       <section class="blog-index" aria-labelledby="blog-title">
-        ${selectedCategory ? `<a class="back-link" href="/blog/">${arrow}All posts</a>` : ''}
-        <div class="blog-posts">${postList}</div>
+        ${categoryNav}
+        <div class="blog-posts">${selectedCategory ? `<a class="back-link" href="/blog/">${arrow}All posts</a>` : ''}${postList}</div>
       </section>`,
     }));
   }

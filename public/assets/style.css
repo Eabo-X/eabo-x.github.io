@@ -141,14 +141,20 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
 .page-description { color: var(--muted); font-size: 17px; line-height: 1.8; margin-bottom: 0; overflow-wrap: anywhere; }
 .blog-page, .post-page { font-family: var(--blog-serif); font-weight: 300; }
 .blog-page { padding-top: 40px; }
-.blog-index { min-width: 0; }
-.blog-index > .back-link { margin-bottom: 20px; }
+.blog-index { display: grid; grid-template-columns: 116px minmax(0, 1fr); align-items: start; gap: 32px; min-width: 0; }
+.blog-posts > .back-link { margin-bottom: 20px; }
 .category-tech { --category-color: #9bb5d3; --category-tint: #edf2f8; }
 .category-paper { --category-color: #91ab9b; --category-tint: #edf3ef; }
 .category-reflection { --category-color: #d0ae91; --category-tint: #f8f0e7; }
 [data-theme="dark"] .category-tech { --category-color: #8fa6bd; --category-tint: #222b35; }
 [data-theme="dark"] .category-paper { --category-color: #99b09f; --category-tint: #233027; }
 [data-theme="dark"] .category-reflection { --category-color: #c6a68b; --category-tint: #332a23; }
+.category-nav { display: grid; align-content: start; gap: 8px; }
+.category-link { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 4px 2px; font-size: 14px; color: var(--muted); }
+.category-swatch { flex: none; width: 14px; height: 14px; border: 1px solid var(--category-color); background: var(--category-tint); }
+.category-link:hover, .category-link[aria-current] { color: var(--ink); }
+.category-link[aria-current] { text-decoration: underline; text-underline-offset: 4px; }
+.category-link[aria-current] .category-swatch { background: var(--category-color); }
 .blog-posts { min-width: 0; }
 .blog-empty { margin: 10px 0 0; font-size: 13px; line-height: 1.8; color: var(--muted); }
 .post-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
@@ -214,6 +220,9 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
 }
 @media (max-width: 700px) {
   .blog-page { padding-top: 32px; }
+  .blog-index { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .category-nav { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+  .category-link { gap: 10px; }
   .post-row { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0 16px; }
   .post-link { grid-column: 1 / -1; padding-top: 0; }
   .post-title { font-size: 16px; }
