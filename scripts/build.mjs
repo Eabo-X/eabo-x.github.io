@@ -54,6 +54,7 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
   <link rel="icon" href="/assets/favicon.svg?v=2" type="image/svg+xml" sizes="any">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
   <script src="${assetURLs['theme.js']}"></script>
+  ${['blog-page', 'post-page'].includes(pageClass) ? `<link rel="preload" href="/assets/fonts/spectral-${pageClass === 'post-page' ? 'light' : 'regular'}-latin.woff2" as="font" type="font/woff2" crossorigin>` : ''}
   <link rel="stylesheet" href="${assetURLs['style.css']}">
   <script type="module" src="${assetURLs['pythagoras.js']}"></script>
   ${pageClass === 'about-page' ? `<script type="module" src="${assetURLs['typewriter.js']}"></script>` : ''}
@@ -168,22 +169,19 @@ export async function buildSite({ quiet = false } = {}) {
   for (const selectedCategory of [null, ...categories]) {
     const route = selectedCategory ? categoryRoute(selectedCategory) : '/blog/';
     const visiblePosts = selectedCategory ? posts.filter((post) => post.category === selectedCategory) : posts;
-    const categoryNav = `<nav class="category-nav" aria-label="Post categories">${categories.map((category) => `
-      <a class="category-link category-${category}" href="${categoryRoute(category)}"${category === selectedCategory ? ' aria-current="page"' : ''}>
-        <span class="category-swatch" aria-hidden="true"></span><span>${category}</span>
-      </a>`).join('')}</nav>`;
     const postList = visiblePosts.length ? `<ol class="post-list">${visiblePosts.map((post) => `
-      <li><a class="post-link category-${post.category}" href="${post.route}">
+      <li class="post-row category-${post.category}">
+        <a class="post-category" href="${categoryRoute(post.category)}"${post.category === selectedCategory ? ' aria-current="page"' : ''}><span class="post-category-name">${post.category}</span></a>
         <time datetime="${post.date}">${post.date}</time>
-        <span class="post-title">${escape(post.title)}</span>
-      </a></li>`).join('')}</ol>` : '<p class="blog-empty">No posts yet.</p>';
+        <a class="post-link" href="${post.route}"><span class="post-title">${escape(post.title)}</span></a>
+      </li>`).join('')}</ol>` : '<p class="blog-empty">No posts yet.</p>';
     pages.set(`${route.slice(1)}index.html`, shell(config, logo, assetURLs, {
       title: `${selectedCategory ? `${selectedCategory} — Blog` : 'Blog'} — ${config.name}`,
       route, active: 'blog', pageClass: 'blog-page',
       description: `${selectedCategory ? `${selectedCategory} notes` : 'Notes, ideas, and writing'} by ${config.name}.`,
       body: `<h1 class="sr-only" id="blog-title">${selectedCategory || 'Blog'}</h1>
       <section class="blog-index" aria-labelledby="blog-title">
-        ${categoryNav}
+        ${selectedCategory ? `<a class="back-link" href="/blog/">${arrow}All posts</a>` : ''}
         <div class="blog-posts">${postList}</div>
       </section>`,
     }));
@@ -191,12 +189,12 @@ export async function buildSite({ quiet = false } = {}) {
 
   for (const post of posts) {
     pages.set(`blog/${post.slug}/index.html`, shell(config, logo, assetURLs, {
-      title: `${post.title} — ${config.name}`, description: post.description,
+      title: `${post.title} — ${config.name}`, description: post.description || post.summary,
       route: post.route, active: 'blog', pageClass: 'post-page',
       body: `<a class="back-link" href="/blog/">${arrow}All posts</a>
       <article>
         <header class="article-header">
-          <div class="post-meta"><time datetime="${post.date}">${escape(formatDate(post.date))}</time><span aria-hidden="true">·</span><span>${post.minutes} min read</span></div>
+          <div class="post-meta"><a href="${categoryRoute(post.category)}">${post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(formatDate(post.date))}</time><span aria-hidden="true">·</span><span>${post.minutes} min read</span></div>
           <h1>${escape(post.title)}</h1>
           ${post.description ? `<p class="page-description">${escape(post.description)}</p>` : ''}
         </header>
