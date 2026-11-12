@@ -18,8 +18,10 @@ const icons = {
   linkedin: '<path d="M5.37 24H.4V7.98h4.97V24ZM2.88 5.8a2.89 2.89 0 1 1 0-5.78 2.89 2.89 0 0 1 0 5.78ZM24 24h-4.97v-7.79c0-1.85-.04-4.23-2.58-4.23-2.58 0-2.98 2.02-2.98 4.1V24H8.5V7.98h4.77v2.19h.07c.66-1.26 2.29-2.59 4.7-2.59C23.08 7.58 24 10.9 24 15.21V24Z"/>',
 };
 const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
-const categories = ['tech', 'paper', 'reflection'];
-const categoryRoute = (category) => `/blog/category/${category}/`;
+const blogRoute = '/blog/';
+const publicationRoute = '/publication/';
+const blogCategories = ['tech', 'reflection'];
+const categoryRoute = (category) => `${blogRoute}category/${category}/`;
 
 function renderSocials(socials = {}) {
   const labels = { github: 'GitHub', twitter: 'X / Twitter', linkedin: 'LinkedIn' };
@@ -54,7 +56,7 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
   <link rel="icon" href="/assets/favicon.svg?v=2" type="image/svg+xml" sizes="any">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
   <script src="${assetURLs['theme.js']}"></script>
-  ${['blog-page', 'post-page'].includes(pageClass) ? `<link rel="preload" href="/assets/fonts/spectral-${pageClass === 'post-page' ? 'light' : 'regular'}-latin.woff2" as="font" type="font/woff2" crossorigin>` : ''}
+  ${['blog-page', 'publication-page', 'post-page'].includes(pageClass) ? `<link rel="preload" href="/assets/fonts/spectral-${pageClass === 'post-page' ? 'light' : 'regular'}-latin.woff2" as="font" type="font/woff2" crossorigin>` : ''}
   <link rel="stylesheet" href="${assetURLs['style.css']}">
   <script type="module" src="${assetURLs['pythagoras.js']}"></script>
   ${pageClass === 'about-page' ? `<script type="module" src="${assetURLs['typewriter.js']}"></script>` : ''}
@@ -73,7 +75,8 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
       </div>
       <nav class="main-nav" aria-label="Main navigation">
         <a href="/"${active === 'about' ? ' aria-current="page"' : ''}>About me</a>
-        <a href="/blog/"${active === 'blog' ? ' aria-current="page"' : ''}>Blog</a>
+        <a href="${blogRoute}"${active === 'blog' ? ' aria-current="page"' : ''}>Blog</a>
+        <a href="${publicationRoute}"${active === 'publication' ? ' aria-current="page"' : ''}>Publication</a>
       </nav>
     </header>
     <main id="main" class="${pageClass}" tabindex="-1">${body}</main>
@@ -82,6 +85,30 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
 </body>
 </html>
 `;
+}
+
+function redirectPage(config, route, label) {
+  return `<!doctype html>
+<html lang="${escape(config.language || 'en')}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escape(label)} — ${escape(config.name)}</title>
+  <link rel="canonical" href="${escape(new URL(route, config.url).href)}">
+  <meta http-equiv="refresh" content="0; url=${escape(route)}">
+</head>
+<body><p>This page has moved. <a href="${escape(route)}">Continue to ${escape(label)}</a>.</p></body>
+</html>
+`;
+}
+
+function renderPostList(posts, selectedCategory = null) {
+  return `<ol class="post-list">${posts.map((post) => `
+    <li class="post-row category-${post.category}">
+      ${post.category === 'paper' ? '' : `<a class="post-category" href="${categoryRoute(post.category)}"${post.category === selectedCategory ? ' aria-current="page"' : ''}><span class="post-category-name">${post.category}</span></a>`}
+      <time datetime="${post.date}">${post.date}</time>
+      <a class="post-link" href="${post.route}"><span class="post-title">${escape(post.title)}</span></a>
+    </li>`).join('')}</ol>`;
 }
 
 async function loadPosts() {
@@ -101,13 +128,13 @@ async function loadPosts() {
     }
     if (!content.trim()) throw new Error(`${file}: the post is empty.`);
     const category = data.category ?? 'tech';
-    if (!categories.includes(category)) {
+    if (!blogCategories.includes(category) && category !== 'paper') {
       throw new Error(`${file}: category must be tech, paper, or reflection.`);
     }
     posts.push({
       title: data.title, description: data.description || '', date, category,
       summary: data.description || postExcerpt(content),
-      slug, route: `/blog/${slug}/`, html: marked.parse(content),
+      slug, route: `${category === 'paper' ? publicationRoute : blogRoute}${slug}/`, html: marked.parse(content),
       minutes: Math.max(1, Math.ceil((content.match(/[\u3400-\u9FFF]|[\p{L}\p{N}]+/gu) || []).length / 220)),
     });
   }
@@ -146,7 +173,9 @@ export async function buildSite({ quiet = false } = {}) {
     .replace(/<svg\b[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="32" height="32" aria-hidden="true" focusable="false" shape-rendering="geometricPrecision">');
   const about = marked.parse(await readFile(path.join(root, 'content/about.md'), 'utf8'));
   const posts = await loadPosts();
-  const latestPost = posts[0];
+  const blogPosts = posts.filter((post) => post.category !== 'paper');
+  const publications = posts.filter((post) => post.category === 'paper');
+  const latestPost = blogPosts[0];
   const greetings = [`Hi, I’m ${config.name} 😊`, '👋 Glad to meet you!'];
   const pages = new Map();
 
@@ -166,19 +195,14 @@ export async function buildSite({ quiet = false } = {}) {
       </a>` : ''}`,
   }));
 
-  for (const selectedCategory of [null, ...categories]) {
-    const route = selectedCategory ? categoryRoute(selectedCategory) : '/blog/';
-    const visiblePosts = selectedCategory ? posts.filter((post) => post.category === selectedCategory) : posts;
-    const categoryNav = `<nav class="category-nav" aria-label="Post categories">${categories.map((category) => `
+  for (const selectedCategory of [null, ...blogCategories]) {
+    const route = selectedCategory ? categoryRoute(selectedCategory) : blogRoute;
+    const visiblePosts = selectedCategory ? blogPosts.filter((post) => post.category === selectedCategory) : blogPosts;
+    const categoryNav = `<nav class="category-nav" aria-label="Post categories">${blogCategories.map((category) => `
       <a class="category-link category-${category}" href="${categoryRoute(category)}"${category === selectedCategory ? ' aria-current="page"' : ''}>
         <span class="category-swatch" aria-hidden="true"></span><span>${category}</span>
       </a>`).join('')}</nav>`;
-    const postList = visiblePosts.length ? `<ol class="post-list">${visiblePosts.map((post) => `
-      <li class="post-row category-${post.category}">
-        <a class="post-category" href="${categoryRoute(post.category)}"${post.category === selectedCategory ? ' aria-current="page"' : ''}><span class="post-category-name">${post.category}</span></a>
-        <time datetime="${post.date}">${post.date}</time>
-        <a class="post-link" href="${post.route}"><span class="post-title">${escape(post.title)}</span></a>
-      </li>`).join('')}</ol>` : '<p class="blog-empty">No posts yet.</p>';
+    const postList = visiblePosts.length ? renderPostList(visiblePosts, selectedCategory) : '<p class="blog-empty">No posts yet.</p>';
     pages.set(`${route.slice(1)}index.html`, shell(config, logo, assetURLs, {
       title: `${selectedCategory ? `${selectedCategory} — Blog` : 'Blog'} — ${config.name}`,
       route, active: 'blog', pageClass: 'blog-page',
@@ -186,25 +210,36 @@ export async function buildSite({ quiet = false } = {}) {
       body: `<h1 class="sr-only" id="blog-title">${selectedCategory || 'Blog'}</h1>
       <section class="blog-index" aria-labelledby="blog-title">
         ${categoryNav}
-        <div class="blog-posts">${selectedCategory ? `<a class="back-link" href="/blog/">${arrow}All posts</a>` : ''}${postList}</div>
+        <div class="blog-posts">${selectedCategory ? `<a class="back-link" href="${blogRoute}">${arrow}All posts</a>` : ''}${postList}</div>
       </section>`,
     }));
   }
 
+  pages.set(`${publicationRoute.slice(1)}index.html`, shell(config, logo, assetURLs, {
+    title: `Publication — ${config.name}`, route: publicationRoute, active: 'publication', pageClass: 'publication-page',
+    description: `Research publications by ${config.name}.`,
+    body: `<h1 class="publication-title">Publication</h1>
+      ${publications.length ? renderPostList(publications) : '<p class="page-description">No publications yet.</p>'}`,
+  }));
+  pages.set(`${categoryRoute('paper').slice(1)}index.html`, redirectPage(config, publicationRoute, 'Publication'));
+
   for (const post of posts) {
-    pages.set(`blog/${post.slug}/index.html`, shell(config, logo, assetURLs, {
+    const isPublication = post.category === 'paper';
+    const indexRoute = isPublication ? publicationRoute : blogRoute;
+    pages.set(`${post.route.slice(1)}index.html`, shell(config, logo, assetURLs, {
       title: `${post.title} — ${config.name}`, description: post.description || post.summary,
-      route: post.route, active: 'blog', pageClass: 'post-page',
-      body: `<a class="back-link" href="/blog/">${arrow}All posts</a>
+      route: post.route, active: isPublication ? 'publication' : 'blog', pageClass: 'post-page',
+      body: `<a class="back-link" href="${indexRoute}">${arrow}${isPublication ? 'All publications' : 'All posts'}</a>
       <article>
         <header class="article-header">
-          <div class="post-meta"><a href="${categoryRoute(post.category)}">${post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(formatDate(post.date))}</time><span aria-hidden="true">·</span><span>${post.minutes} min read</span></div>
+          <div class="post-meta"><a href="${isPublication ? publicationRoute : categoryRoute(post.category)}">${isPublication ? 'Publication' : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(formatDate(post.date))}</time><span aria-hidden="true">·</span><span>${post.minutes} min read</span></div>
           <h1>${escape(post.title)}</h1>
           ${post.description ? `<p class="page-description">${escape(post.description)}</p>` : ''}
         </header>
         <div class="article-body prose">${post.html}</div>
       </article>`,
     }));
+    if (isPublication) pages.set(`blog/${post.slug}/index.html`, redirectPage(config, post.route, post.title));
   }
 
   const profileHandle = (url) => url ? `@${new URL(url).pathname.split('/').filter(Boolean)[0]}` : '';
@@ -234,7 +269,7 @@ export async function buildSite({ quiet = false } = {}) {
   }));
   pages.set('.nojekyll', '');
   pages.set('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${new URL('/sitemap.xml', config.url).href}\n`);
-  pages.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/blog/', '/contact/', ...categories.map(categoryRoute), ...posts.map((post) => post.route)].map((route) => `<url><loc>${escape(new URL(route, config.url).href)}</loc></url>`).join('')}</urlset>\n`);
+  pages.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', blogRoute, publicationRoute, '/contact/', ...blogCategories.map(categoryRoute), ...posts.map((post) => post.route)].map((route) => `<url><loc>${escape(new URL(route, config.url).href)}</loc></url>`).join('')}</urlset>\n`);
 
   // All content is rendered before replacing dist, so invalid posts fail the build early.
   await rm(output, { recursive: true, force: true });
@@ -244,7 +279,7 @@ export async function buildSite({ quiet = false } = {}) {
     await mkdir(path.dirname(path.join(output, file)), { recursive: true });
     await writeFile(path.join(output, file), content);
   }
-  if (!quiet) console.log(`Built About me, Blog, and ${posts.length} published post${posts.length === 1 ? '' : 's'} → dist/`);
+  if (!quiet) console.log(`Built About me, Blog, and Publication (${blogPosts.length} blog posts, ${publications.length} publications) → dist/`);
   return { posts: posts.length, pages: pages.size };
 }
 
