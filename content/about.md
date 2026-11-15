@@ -1,1 +1,1 @@
-A little about me, soon.
+AI is an experimental science.
