@@ -4,6 +4,15 @@
   "language": "en",
   "url": "https://eabo-x.github.io",
   "description": "The personal website and blog of Eabo X.",
+  "blogComments": {
+    "repo": "Eabo-X/eabo-x.github.io",
+    "repoId": "R_kgDOVlj82g",
+    "category": "Blog comments",
+    "categoryId": "",
+    "threads": {
+      "the-junior-crisis-and-our-own-reward-functions": 1
+    }
+  },
   "socials": {
     "github": "https://github.com/Eabo-X",
     "twitter": "https://x.com/EaboXbot",

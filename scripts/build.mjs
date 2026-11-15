@@ -2,7 +2,7 @@ import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { marked } from 'marked';
+import { Marked, marked } from 'marked';
 import matter from 'gray-matter';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
@@ -18,6 +18,8 @@ const icons = {
   linkedin: '<path d="M5.37 24H.4V7.98h4.97V24ZM2.88 5.8a2.89 2.89 0 1 1 0-5.78 2.89 2.89 0 0 1 0 5.78ZM24 24h-4.97v-7.79c0-1.85-.04-4.23-2.58-4.23-2.58 0-2.98 2.02-2.98 4.1V24H8.5V7.98h4.77v2.19h.07c.66-1.26 2.29-2.59 4.7-2.59C23.08 7.58 24 10.9 24 15.21V24Z"/>',
 };
 const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
+const globe = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg>';
+const chevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 const blogRoute = '/blog/';
 const publicationRoute = '/publication/';
 const blogCategories = ['tech', 'reflection'];
@@ -35,10 +37,12 @@ function renderSocials(socials = {}) {
   }).join('');
 }
 
-function shell(config, logo, assetURLs, { title, description, route = '/', active = 'about', body, pageClass = '' }) {
+function shell(config, logo, assetURLs, { title, description, route = '/', active = 'about', body, pageClass = '', language = config.language || 'en', alternates = [], readingTools = false, commentBacklink = '' }) {
   const canonical = new URL(route, config.url).href;
+  const siteLanguage = config.language || 'en';
+  const chromeLanguage = language === siteLanguage ? '' : ` lang="${escape(siteLanguage)}"`;
   return `<!doctype html>
-<html lang="${escape(config.language || 'en')}">
+<html lang="${escape(language)}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -46,6 +50,8 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
   <title>${escape(title)}</title>
   <meta name="description" content="${escape(description || config.description)}">
   <link rel="canonical" href="${escape(canonical)}">
+  ${alternates.map(({ language, route }) => `<link rel="alternate" hreflang="${escape(language)}" href="${escape(new URL(route, config.url).href)}">`).join('\n  ')}
+  ${commentBacklink ? `<meta name="giscus:backlink" content="${escape(new URL(commentBacklink, config.url).href)}">` : ''}
   <meta property="og:type" content="${pageClass === 'post-page' ? 'article' : 'website'}">
   <meta property="og:title" content="${escape(title)}">
   <meta property="og:description" content="${escape(description || config.description)}">
@@ -60,12 +66,14 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
   <link rel="stylesheet" href="${assetURLs['style.css']}">
   <script type="module" src="${assetURLs['pythagoras.js']}"></script>
   ${pageClass === 'about-page' ? `<script type="module" src="${assetURLs['typewriter.js']}"></script>` : ''}
+  ${readingTools ? `<script type="module" src="${assetURLs['post-reading.js']}"></script>` : ''}
+  ${commentBacklink ? `<script type="module" src="${assetURLs['post-comments.js']}"></script>` : ''}
 </head>
 <body>
   <canvas id="pythagoras-background" class="geometry-background" aria-hidden="true"></canvas>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main"${chromeLanguage}>Skip to content</a>
   <div class="site-shell">
-    <header class="site-header">
+    <header class="site-header"${chromeLanguage}>
       <div class="site-brand">
         <a class="wordmark" href="/" aria-label="${escape(config.name)} home"><span class="wordmark-logo" aria-hidden="true">${logo}</span><span>${escape(config.name)}</span></a>
         <button class="theme-toggle" type="button" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Switch to dark mode" hidden>
@@ -79,8 +87,8 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
         <a href="${publicationRoute}"${active === 'publication' ? ' aria-current="page"' : ''}>Publication</a>
       </nav>
     </header>
-    <main id="main" class="${pageClass}" tabindex="-1">${body}</main>
-    ${route === '/' ? '' : '<nav class="page-home" aria-label="Return to homepage"><a class="home-link" href="/"><span aria-hidden="true">←</span>Home</a></nav>'}
+    <main id="main" class="${pageClass}${readingTools ? ' has-toc' : ''}" tabindex="-1">${body}</main>
+    ${route === '/' ? '' : `<nav class="page-home" aria-label="Return to homepage"${chromeLanguage}><a class="home-link" href="/"><span aria-hidden="true">←</span>Home</a></nav>`}
   </div>
 </body>
 </html>
@@ -111,6 +119,80 @@ function renderPostList(posts, selectedCategory = null) {
     </li>`).join('')}</ol>`;
 }
 
+function inlineText(tokens) {
+  return tokens.map((token) => {
+    if (token.tokens) return inlineText(token.tokens);
+    if (token.type === 'html') return '';
+    if (token.type === 'br') return ' ';
+    return token.text || '';
+  }).join('');
+}
+
+function renderBlogMarkdown(content, file, originalSections = null) {
+  const ids = new Map();
+  const parser = new Marked({ renderer: {
+    heading(token) {
+      const id = ids.get(token);
+      if (!id) return false;
+      return `<h${token.depth} id="${escape(id)}" tabindex="-1" data-post-section>${this.parser.parseInline(token.tokens)}</h${token.depth}>\n`;
+    },
+  } });
+  const tokens = parser.lexer(content);
+  const headings = tokens.filter((token) => token.type === 'heading' && token.depth >= 2 && token.depth <= 4);
+  if (originalSections && (headings.length !== originalSections.length || headings.some((token, index) => token.depth !== originalSections[index].depth))) {
+    throw new Error(`${file}: translation headings must match the original heading count and levels.`);
+  }
+  const used = new Set();
+  const sections = headings.map((token, index) => {
+    const label = inlineText(token.tokens).replace(/\s+/g, ' ').trim();
+    const slug = label.normalize('NFKD').toLowerCase().replace(/\p{M}/gu, '').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '');
+    const base = `section-${slug || index + 1}`;
+    // The same fragment leads to the corresponding section in either language.
+    let id = originalSections?.[index].id || base;
+    for (let suffix = 2; used.has(id); suffix++) id = `${base}-${suffix}`;
+    used.add(id);
+    ids.set(token, id);
+    return { id, label, depth: token.depth };
+  });
+  return { html: parser.parser(tokens), sections };
+}
+
+function renderToc(sections) {
+  const roots = [];
+  const parents = [];
+  for (const section of sections) {
+    while (parents.length && parents.at(-1).depth >= section.depth) parents.pop();
+    const entry = { ...section, children: [] };
+    (parents.at(-1)?.children ?? roots).push(entry);
+    parents.push(entry);
+  }
+  const render = (entries) => `<ol class="post-toc-list">${entries.map(({ id, label, children }) =>
+    `<li><a href="#${encodeURIComponent(id)}">${escape(label)}</a>${children.length ? render(children) : ''}</li>`).join('')}</ol>`;
+  return render(roots);
+}
+
+function readingMinutes(content, unitsPerMinute = 220) {
+  return Math.max(1, Math.ceil((content.match(/[\u3400-\u9FFF]|[\p{L}\p{N}]+/gu) || []).length / unitsPerMinute));
+}
+
+async function loadChinesePost(folder, file, post) {
+  const source = await readFile(path.join(folder, 'zh', file), 'utf8').catch((error) => {
+    if (error.code !== 'ENOENT') throw error;
+    return null;
+  });
+  if (source === null) return null;
+  const { data, content } = matter(source);
+  if (data.draft !== false) return null;
+  if (typeof data.title !== 'string' || !data.title.trim() || !content.trim()) {
+    throw new Error(`zh/${file}: a title and translated text are required.`);
+  }
+  return {
+    title: data.title, description: data.description || '', summary: data.description || postExcerpt(content),
+    route: `${post.route}zh/`, minutes: readingMinutes(content, 420),
+    ...renderBlogMarkdown(content, `zh/${file}`, post.sections),
+  };
+}
+
 async function loadPosts() {
   const folder = path.join(root, 'content/posts');
   const files = (await readdir(folder)).filter((file) => file.endsWith('.md'));
@@ -131,38 +213,87 @@ async function loadPosts() {
     if (!blogCategories.includes(category) && category !== 'paper') {
       throw new Error(`${file}: category must be tech, paper, or reflection.`);
     }
-    posts.push({
+    const post = {
       title: data.title, description: data.description || '', date, category,
       summary: data.description || postExcerpt(content),
-      slug, route: `${category === 'paper' ? publicationRoute : blogRoute}${slug}/`, html: marked.parse(content),
-      minutes: Math.max(1, Math.ceil((content.match(/[\u3400-\u9FFF]|[\p{L}\p{N}]+/gu) || []).length / 220)),
-    });
+      slug, route: `${category === 'paper' ? publicationRoute : blogRoute}${slug}/`, minutes: readingMinutes(content),
+      ...(category === 'paper' ? { html: marked.parse(content), sections: [] } : renderBlogMarkdown(content, file)),
+    };
+    post.zh = category === 'paper' ? null : await loadChinesePost(folder, file, post);
+    posts.push(post);
   }
   return posts.sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
 }
 
 function postExcerpt(content) {
   const paragraph = marked.lexer(content).find((token) => token.type === 'paragraph');
-  const text = (tokens) => tokens.map((token) => {
-    if (token.tokens) return text(token.tokens);
-    if (token.type === 'html') return '';
-    if (token.type === 'br') return ' ';
-    return token.text || '';
-  }).join('');
-  const characters = Array.from(text(paragraph?.tokens || []).replace(/\s+/g, ' ').trim());
+  const characters = Array.from(inlineText(paragraph?.tokens || []).replace(/\s+/g, ' ').trim());
   if (!characters.length) return 'Read the full post.';
   return characters.length > 160 ? `${characters.slice(0, 160).join('').trimEnd()}…` : characters.join('');
 }
 
-const formatDate = (date, options = { month: 'long', day: 'numeric', year: 'numeric' }) =>
-  new Intl.DateTimeFormat('en-GB', { ...options, timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
+const formatDate = (date, locale = 'en-GB') =>
+  new Intl.DateTimeFormat(locale, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
+
+function renderArticleComments(config, post, isChinese, label) {
+  const { repo, repoId, category, categoryId, threads } = config;
+  const number = threads?.[post.slug];
+  const discussion = `https://github.com/${repo}/discussions${number ? `/${number}` : ''}`;
+  return `<section class="article-comments" aria-labelledby="comments">
+    <h2 id="comments" tabindex="-1" data-post-section>${label}</h2>
+    <p>${isChinese ? '使用 GitHub 账号留言。' : 'Sign in with GitHub to leave a comment.'} <a href="${escape(discussion)}">${isChinese ? '在 GitHub 查看讨论' : 'View on GitHub'}</a></p>
+    <div class="giscus" data-comment-widget data-repo="${escape(repo)}" data-repo-id="${escape(repoId)}" data-category="${escape(category)}" data-category-id="${escape(categoryId)}" data-lang="${isChinese ? 'zh-CN' : 'en'}" data-mapping="${number ? 'number' : 'specific'}" data-term="${escape(number || `blog/${post.slug}`)}"></div>
+  </section>`;
+}
+
+function postPage(config, logo, assetURLs, post, edition = post) {
+  const isPublication = post.category === 'paper';
+  const isChinese = edition === post.zh;
+  const siteLanguage = config.language || 'en';
+  const language = isChinese ? 'zh-Hans' : siteLanguage;
+  const alternates = post.zh ? [{ language: siteLanguage, route: post.route }, { language: 'zh-Hans', route: post.zh.route }] : [];
+  const other = post.zh ? alternates[isChinese ? 0 : 1] : null;
+  const indexRoute = isPublication ? publicationRoute : blogRoute;
+  const backLabel = isPublication ? 'All publications' : isChinese ? '所有文章' : 'All posts';
+  const tocLabel = isChinese ? '本文目录' : 'On this page';
+  const comments = !isPublication && config.blogComments?.categoryId ? config.blogComments : null;
+  const commentsLabel = isChinese ? '评论' : 'Comments';
+  const sections = comments && edition.sections.length ? [...edition.sections, { id: 'comments', label: commentsLabel, depth: 2 }] : edition.sections;
+  const toc = sections.length ? renderToc(sections) : '';
+  const categoryLabel = { tech: '技术', reflection: '随想' };
+  const switchLabel = isChinese ? 'Read in English' : '阅读中文版';
+  const switchLink = other ? `<a class="article-language" data-post-language href="${other.route}" hreflang="${other.language}" lang="${other.language}"><span>${globe}${switchLabel}</span></a>` : '';
+  return shell(config, logo, assetURLs, {
+    title: `${edition.title} — ${config.name}`, description: edition.description || edition.summary,
+    route: edition.route, active: isPublication ? 'publication' : 'blog', pageClass: 'post-page',
+    language, alternates, readingTools: Boolean(toc),
+    commentBacklink: comments ? post.route : '',
+    body: `<div class="post-reading">
+      ${toc ? `<nav class="post-toc post-toc-desktop" data-post-toc aria-label="${tocLabel}"><p class="post-toc-label" aria-hidden="true">${tocLabel}</p>${toc}</nav>` : ''}
+      <div class="post-reading-main">
+        <a class="back-link" href="${indexRoute}">${arrow}${backLabel}</a>
+        <article>
+          <header class="article-header">
+            <div class="post-meta"><a href="${isPublication ? publicationRoute : categoryRoute(post.category)}">${isPublication ? 'Publication' : isChinese ? categoryLabel[post.category] : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(formatDate(post.date, isChinese ? 'zh-CN' : 'en-GB'))}</time><span aria-hidden="true">·</span><span>${isChinese ? `阅读约 ${edition.minutes} 分钟` : `${edition.minutes} min read`}</span></div>
+            <h1>${escape(edition.title)}</h1>
+            ${edition.description ? `<p class="page-description">${escape(edition.description)}</p>` : ''}
+            ${switchLink}
+          </header>
+          ${toc ? `<details class="post-toc-mobile"><summary>${tocLabel}${chevron}</summary><nav class="post-toc" data-post-toc aria-label="${tocLabel}">${toc}</nav></details>` : ''}
+          <div class="article-body prose">${edition.html}</div>
+          ${comments ? renderArticleComments(comments, post, isChinese, commentsLabel) : ''}
+        </article>
+      </div>
+    </div>`,
+  });
+}
 
 export async function buildSite({ quiet = false } = {}) {
   const config = JSON.parse(await readFile(path.join(root, 'site.config.json'), 'utf8'));
   if (!config.name || !config.url) throw new Error('site.config.json requires name and url.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.email || '')) throw new Error('site.config.json requires a valid email.');
   const assetURLs = Object.fromEntries(await Promise.all(
-    ['style.css', 'theme.js', 'pythagoras.js', 'typewriter.js'].map(async (file) => {
+    ['style.css', 'theme.js', 'pythagoras.js', 'typewriter.js', 'post-reading.js', 'post-comments.js'].map(async (file) => {
       const content = await readFile(path.join(root, 'public/assets', file));
       const version = createHash('sha256').update(content).digest('hex').slice(0, 12);
       return [file, `/assets/${file}?v=${version}`];
@@ -224,22 +355,9 @@ export async function buildSite({ quiet = false } = {}) {
   pages.set(`${categoryRoute('paper').slice(1)}index.html`, redirectPage(config, publicationRoute, 'Publication'));
 
   for (const post of posts) {
-    const isPublication = post.category === 'paper';
-    const indexRoute = isPublication ? publicationRoute : blogRoute;
-    pages.set(`${post.route.slice(1)}index.html`, shell(config, logo, assetURLs, {
-      title: `${post.title} — ${config.name}`, description: post.description || post.summary,
-      route: post.route, active: isPublication ? 'publication' : 'blog', pageClass: 'post-page',
-      body: `<a class="back-link" href="${indexRoute}">${arrow}${isPublication ? 'All publications' : 'All posts'}</a>
-      <article>
-        <header class="article-header">
-          <div class="post-meta"><a href="${isPublication ? publicationRoute : categoryRoute(post.category)}">${isPublication ? 'Publication' : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(formatDate(post.date))}</time><span aria-hidden="true">·</span><span>${post.minutes} min read</span></div>
-          <h1>${escape(post.title)}</h1>
-          ${post.description ? `<p class="page-description">${escape(post.description)}</p>` : ''}
-        </header>
-        <div class="article-body prose">${post.html}</div>
-      </article>`,
-    }));
-    if (isPublication) pages.set(`blog/${post.slug}/index.html`, redirectPage(config, post.route, post.title));
+    pages.set(`${post.route.slice(1)}index.html`, postPage(config, logo, assetURLs, post));
+    if (post.zh) pages.set(`${post.zh.route.slice(1)}index.html`, postPage(config, logo, assetURLs, post, post.zh));
+    if (post.category === 'paper') pages.set(`blog/${post.slug}/index.html`, redirectPage(config, post.route, post.title));
   }
 
   const profileHandle = (url) => url ? `@${new URL(url).pathname.split('/').filter(Boolean)[0]}` : '';
@@ -269,7 +387,8 @@ export async function buildSite({ quiet = false } = {}) {
   }));
   pages.set('.nojekyll', '');
   pages.set('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${new URL('/sitemap.xml', config.url).href}\n`);
-  pages.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', blogRoute, publicationRoute, '/contact/', ...blogCategories.map(categoryRoute), ...posts.map((post) => post.route)].map((route) => `<url><loc>${escape(new URL(route, config.url).href)}</loc></url>`).join('')}</urlset>\n`);
+  const postRoutes = posts.flatMap((post) => post.zh ? [post.route, post.zh.route] : [post.route]);
+  pages.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', blogRoute, publicationRoute, '/contact/', ...blogCategories.map(categoryRoute), ...postRoutes].map((route) => `<url><loc>${escape(new URL(route, config.url).href)}</loc></url>`).join('')}</urlset>\n`);
 
   // All content is rendered before replacing dist, so invalid posts fail the build early.
   await rm(output, { recursive: true, force: true });
