@@ -247,16 +247,16 @@ function postPage(config, logo, assetURLs, post, edition = post) {
   const isChinese = edition === post.zh;
   const siteLanguage = config.language || 'en';
   const language = isChinese ? 'zh-Hans' : siteLanguage;
+  const navLanguage = isChinese ? ` lang="${escape(siteLanguage)}"` : '';
   const alternates = post.zh ? [{ language: siteLanguage, route: post.route }, { language: 'zh-Hans', route: post.zh.route }] : [];
   const other = post.zh ? alternates[isChinese ? 0 : 1] : null;
   const indexRoute = isPublication ? publicationRoute : blogRoute;
-  const backLabel = isPublication ? 'All publications' : isChinese ? '所有文章' : 'All posts';
+  const backLabel = isPublication ? 'All publications' : 'All posts';
   const tocLabel = isChinese ? '本文目录' : 'On this page';
   const comments = !isPublication && config.blogComments?.categoryId ? config.blogComments : null;
   const commentsLabel = isChinese ? '评论' : 'Comments';
   const sections = comments && edition.sections.length ? [...edition.sections, { id: 'comments', label: commentsLabel, depth: 2 }] : edition.sections;
   const toc = sections.length ? renderToc(sections) : '';
-  const categoryLabel = { tech: '技术', reflection: '随想' };
   const switchLabel = isChinese ? 'Read in English' : '阅读中文版';
   const switchLink = other ? `<a class="article-language" data-post-language href="${other.route}" hreflang="${other.language}" lang="${other.language}"><span>${globe}${switchLabel}</span></a>` : '';
   return shell(config, logo, assetURLs, {
@@ -267,10 +267,10 @@ function postPage(config, logo, assetURLs, post, edition = post) {
     body: `<div class="post-reading">
       ${toc ? `<nav class="post-toc post-toc-desktop" data-post-toc aria-label="${tocLabel}"><p class="post-toc-label" aria-hidden="true">${tocLabel}</p>${toc}</nav>` : ''}
       <div class="post-reading-main">
-        <a class="back-link" href="${indexRoute}">${arrow}${backLabel}</a>
+        <a class="back-link" href="${indexRoute}"${navLanguage}>${arrow}${backLabel}</a>
         <article>
           <header class="article-header">
-            <div class="post-meta"><a href="${isPublication ? publicationRoute : categoryRoute(post.category)}">${isPublication ? 'Publication' : isChinese ? categoryLabel[post.category] : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(formatDate(post.date, isChinese ? 'zh-CN' : 'en-GB'))}</time></div>
+            <div class="post-meta"><a href="${isPublication ? publicationRoute : categoryRoute(post.category)}"${navLanguage}>${isPublication ? 'Publication' : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(formatDate(post.date, isChinese ? 'zh-CN' : 'en-GB'))}</time></div>
             <h1>${escape(edition.title)}</h1>
             ${edition.description ? `<p class="page-description">${escape(edition.description)}</p>` : ''}
             ${switchLink}
