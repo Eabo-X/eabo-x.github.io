@@ -111,12 +111,16 @@ function redirectPage(config, route, label) {
 }
 
 function renderPostList(posts, selectedCategory = null) {
-  return `<ol class="post-list">${posts.map((post) => `
+  return `<ol class="post-list">${posts.map((post) => {
+    const dateLabel = post.layout === 'essay' ? formatDate(post.date, 'en-US', 'short')
+      : post.date.length === 7 ? formatDate(post.date) : post.date;
+    return `
     <li class="post-row category-${post.category}">
       ${post.category === 'paper' ? '' : `<a class="post-category" href="${categoryRoute(post.category)}"${post.category === selectedCategory ? ' aria-current="page"' : ''}><span class="post-category-name">${post.category}</span></a>`}
-      <time datetime="${post.date}">${post.date.length === 7 ? escape(formatDate(post.date)) : post.date}</time>
+      <time datetime="${post.date}">${escape(dateLabel)}</time>
       <a class="post-link" href="${post.route}"><span class="post-title">${escape(post.title)}</span></a>
-    </li>`).join('')}</ol>`;
+    </li>`;
+  }).join('')}</ol>`;
 }
 
 function inlineText(tokens) {
@@ -184,6 +188,7 @@ async function loadChinesePost(folder, file, post) {
   }
   return {
     title: data.title, description: data.description || '', summary: data.description || postExcerpt(content),
+    date: data.date === undefined ? post.date : readPostDate(data.date, `zh/${file}`),
     route: `${post.route}zh/`,
     ...renderBlogMarkdown(content, `zh/${file}`, post.sections),
   };
@@ -200,10 +205,8 @@ async function loadPosts() {
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
       throw new Error(`${file}: use a lowercase, hyphen-separated filename.`);
     }
-    const date = data.date instanceof Date ? data.date.toISOString().slice(0, 10) : String(data.date ?? '');
-    if (!data.title || !isPostDate(date)) {
-      throw new Error(`${file}: a title and a valid date (YYYY-MM or YYYY-MM-DD) are required.`);
-    }
+    if (!data.title) throw new Error(`${file}: a title is required.`);
+    const date = readPostDate(data.date, file);
     if (!content.trim()) throw new Error(`${file}: the post is empty.`);
     const category = data.category ?? 'tech';
     if (!blogCategories.includes(category) && category !== 'paper') {
@@ -211,6 +214,7 @@ async function loadPosts() {
     }
     const post = {
       title: data.title, description: data.description || '', date, category,
+      author: data.author || '', layout: data.layout,
       summary: data.description || postExcerpt(content),
       slug, route: `${category === 'paper' ? publicationRoute : blogRoute}${slug}/`,
       ...(category === 'paper' ? { html: marked.parse(content), sections: [] } : renderBlogMarkdown(content, file)),
@@ -233,14 +237,17 @@ function parsePostDate(date) {
   return new Date(`${calendarDate}T12:00:00Z`);
 }
 
-function isPostDate(date) {
-  if (!/^\d{4}-\d{2}(?:-\d{2})?$/.test(date)) return false;
+function readPostDate(value, file) {
+  const date = value instanceof Date ? value.toISOString().slice(0, 10) : String(value ?? '');
   const parsed = parsePostDate(date);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, date.length) === date;
+  if (!/^\d{4}-\d{2}(?:-\d{2})?$/.test(date) || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, date.length) !== date) {
+    throw new Error(`${file}: a valid date (YYYY-MM or YYYY-MM-DD) is required.`);
+  }
+  return date;
 }
 
-function formatDate(date, locale = 'en-GB') {
-  const options = { month: 'long', year: 'numeric', timeZone: 'UTC' };
+function formatDate(date, locale = 'en-GB', month = 'long') {
+  const options = { month, year: 'numeric', timeZone: 'UTC' };
   if (date.length === 10) options.day = 'numeric';
   return new Intl.DateTimeFormat(locale, options).format(parsePostDate(date));
 }
@@ -259,6 +266,7 @@ function renderArticleComments(config, post, isChinese, label) {
 function postPage(config, logo, assetURLs, post, edition = post) {
   const isPublication = post.category === 'paper';
   const isChinese = edition === post.zh;
+  const isEssay = post.layout === 'essay';
   const siteLanguage = config.language || 'en';
   const language = isChinese ? 'zh-Hans' : siteLanguage;
   const navLanguage = isChinese ? ` lang="${escape(siteLanguage)}"` : '';
@@ -273,6 +281,13 @@ function postPage(config, logo, assetURLs, post, edition = post) {
   const toc = sections.length ? renderToc(sections) : '';
   const switchLabel = isChinese ? 'Read in English' : '阅读中文版';
   const switchLink = other ? `<a class="article-language" data-post-language href="${other.route}" hreflang="${other.language}" lang="${other.language}"><span>${globe}${switchLabel}</span></a>` : '';
+  const title = `<h1>${escape(edition.title)}</h1>`;
+  const dateLabel = isEssay ? formatDate(edition.date, 'en-US', 'short') : formatDate(edition.date, isChinese ? 'zh-CN' : 'en-GB');
+  const meta = `<div class="post-meta">
+    <a href="${isPublication ? publicationRoute : categoryRoute(post.category)}"${navLanguage}>${isPublication ? 'Publication' : post.category}</a>
+    <span aria-hidden="true">·</span><time datetime="${edition.date}"${isEssay ? navLanguage : ''}>${escape(dateLabel)}</time>
+    ${post.author ? `<span aria-hidden="true">·</span><span class="article-author">${escape(post.author)}</span>` : ''}
+  </div>`;
   return shell(config, logo, assetURLs, {
     title: `${edition.title} — ${config.name}`, description: edition.description || edition.summary,
     route: edition.route, active: isPublication ? 'publication' : 'blog', pageClass: 'post-page',
@@ -282,10 +297,9 @@ function postPage(config, logo, assetURLs, post, edition = post) {
       ${toc ? `<nav class="post-toc post-toc-desktop" data-post-toc aria-label="${tocLabel}"><p class="post-toc-label" aria-hidden="true">${tocLabel}</p>${toc}</nav>` : ''}
       <div class="post-reading-main">
         <a class="back-link" href="${indexRoute}"${navLanguage}>${arrow}${backLabel}</a>
-        <article>
+        <article${isEssay ? ' class="article-essay"' : ''}>
           <header class="article-header">
-            <div class="post-meta"><a href="${isPublication ? publicationRoute : categoryRoute(post.category)}"${navLanguage}>${isPublication ? 'Publication' : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(formatDate(post.date, isChinese ? 'zh-CN' : 'en-GB'))}</time></div>
-            <h1>${escape(edition.title)}</h1>
+            ${isEssay ? `${title}${meta}` : `${meta}${title}`}
             ${edition.description ? `<p class="page-description">${escape(edition.description)}</p>` : ''}
             ${switchLink}
           </header>

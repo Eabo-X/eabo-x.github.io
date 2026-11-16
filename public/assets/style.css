@@ -227,6 +227,19 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
 .article-body.prose h2 { font-size: 22px; }
 .article-body.prose h3 { font-size: 19px; }
 .article-body strong { font-weight: 600; }
+.article-essay .article-header { margin-bottom: 18px; text-align: start; }
+.article-essay .article-header h1 { margin: 0 0 12px; font-size: clamp(25px, 4vw, 32px); line-height: 1.18; }
+.article-essay .post-meta { justify-content: flex-start; font-family: var(--sans); font-weight: 400; }
+.article-essay .post-meta :is(time, .article-author) { padding: 1px 7px; border-radius: 4px; background: var(--code); }
+.article-essay .article-language { margin-top: 7px; }
+.article-essay .article-body.prose { font-family: var(--sans); font-size: 16px; font-weight: 400; line-height: 1.5; }
+.article-essay .article-body.prose p { margin-bottom: .75em; }
+.article-essay .article-body.prose :is(h2, h3) { font-family: "Spectral", var(--sans); font-weight: 400; letter-spacing: 0; }
+.article-essay .article-body.prose h3 { font-size: 18px; }
+.article-essay .article-body.prose a { color: var(--accent); }
+.article-essay .article-body.prose blockquote { margin: 0 0 16px; padding: 9px 0 9px 14px; color: var(--ink); }
+.article-essay .article-body.prose blockquote > :last-child { margin-bottom: 0; }
+.article-essay:lang(zh-Hans) :is(.article-header h1, .article-body.prose h2, .article-body.prose h3) { font-family: "Spectral", var(--sans); font-weight: 700; }
 .prose { overflow-wrap: anywhere; }
 .prose p { margin-bottom: 1.3em; }
 .prose a { text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--link-line); transition: color 160ms ease; }
