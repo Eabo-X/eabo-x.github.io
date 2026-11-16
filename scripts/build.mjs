@@ -19,6 +19,16 @@ const icons = {
 };
 const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
 const chevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+const languageIcon = `<svg class="language-toggle-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+  <g class="language-card-zh">
+    <rect x="9.5" y="8" width="12.5" height="13.5" rx="1.8" fill="var(--language-card-fill)"/>
+    <path d="M15.4 12h4.7m-2.35-1.5V12m1.3 0c-.7 2.9-2.6 4.7-5.15 6.2m1.45-4.4c.9 1.85 2.4 3.25 4.45 4.4" fill="none" stroke="var(--language-card-ink)"/>
+  </g>
+  <g class="language-card-en">
+    <rect x="2" y="2.5" width="12" height="13" rx="1.8" fill="var(--language-card-fill)"/>
+    <path d="m5 12 3-6 3 6M6 10h4" fill="none" stroke="var(--language-card-ink)"/>
+  </g>
+</svg>`;
 const blogRoute = '/blog/';
 const publicationRoute = '/publication/';
 const englishRoute = (route) => `/en${route}`;
@@ -51,11 +61,10 @@ function renderReadingLanguageToggle(language, alternates) {
   const alternate = alternates.find((edition) => edition.language !== language);
   const inEnglish = alternate?.language === 'zh-Hans';
   const label = `Switch reading language to ${inEnglish ? 'Chinese' : 'English'}`;
-  const attributes = `class="language-toggle" data-reading-language-toggle aria-label="${label}" title="${label}"`;
-  const icon = `<span class="language-toggle-icon" aria-hidden="true">${inEnglish ? 'EN' : '中'}</span>`;
+  const attributes = `class="language-toggle" data-reading-language-toggle data-reading-language="${inEnglish ? 'en' : 'zh-Hans'}" aria-label="${label}" title="${label}"`;
   return alternate
-    ? `<a ${attributes} href="${escape(alternate.route)}" hreflang="${escape(alternate.language)}">${icon}</a>`
-    : `<button ${attributes} type="button" hidden>${icon}</button>`;
+    ? `<a ${attributes} href="${escape(alternate.route)}" hreflang="${escape(alternate.language)}">${languageIcon}</a>`
+    : `<button ${attributes} type="button" hidden>${languageIcon}</button>`;
 }
 
 function shell(config, logo, assetURLs, { title, description, route = '/', active = 'about', body, pageClass = '', language = config.language || 'en', alternates = [], readingTools = false, commentBacklink = '' }) {
@@ -99,11 +108,13 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
     <header class="site-header"${chromeLanguage}>
       <div class="site-brand">
         <a class="wordmark" href="/" aria-label="${escape(config.name)} home"><span class="wordmark-logo" aria-hidden="true">${logo}</span><span>${escape(config.name)}</span></a>
-        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Switch to dark mode" hidden>
-          <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
-          <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 14.1A8.7 8.7 0 0 1 9.9 3.2 8.7 8.7 0 1 0 20.8 14.1Z"/></svg>
-        </button>
-        ${renderReadingLanguageToggle(language, alternates)}
+        <div class="site-controls">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Switch to dark mode" hidden>
+            <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+            <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 14.1A8.7 8.7 0 0 1 9.9 3.2 8.7 8.7 0 1 0 20.8 14.1Z"/></svg>
+          </button>
+          ${renderReadingLanguageToggle(language, alternates)}
+        </div>
       </div>
       <nav class="main-nav" aria-label="Main navigation">
         <a href="/"${active === 'about' ? ' aria-current="page"' : ''}>About me</a>

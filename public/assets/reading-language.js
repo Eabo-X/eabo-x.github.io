@@ -27,7 +27,7 @@ function syncNavigation() {
     toggle.href = alternateUrl();
   } else {
     const label = `Switch reading language to ${inEnglish ? 'Chinese' : 'English'}`;
-    toggle.firstElementChild.textContent = inEnglish ? 'EN' : '中';
+    toggle.dataset.readingLanguage = inEnglish ? 'en' : 'zh-Hans';
     toggle.setAttribute('aria-label', label);
     toggle.title = label;
     toggle.hidden = false;
