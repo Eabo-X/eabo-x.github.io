@@ -2,7 +2,6 @@
 title: "Kimi & MiMo: First Principles, Long-Term Vision, and Organization in the AGI Era"
 date: "2026-11-16"
 category: "reflection"
-author: "@Eabo"
 layout: "essay"
 draft: false
 ---

@@ -1,6 +1,5 @@
 ---
 title: "Kimi & MiMo：first principle，长周期的 vision，AGI-era的组织形式"
-date: "2026-11-15"
 draft: false
 ---
 
