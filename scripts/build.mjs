@@ -57,6 +57,10 @@ function readingLinkAttributes(chinese, english = englishRoute(chinese)) {
   return `data-reading-zh-href="${escape(chinese)}" data-reading-en-href="${escape(english)}"`;
 }
 
+function readingTextAttributes(chinese, english) {
+  return `data-reading-zh-text="${escape(chinese)}" data-reading-en-text="${escape(english)}"`;
+}
+
 function renderReadingLanguageToggle(language, alternates) {
   const alternate = alternates.find((edition) => edition.language !== language);
   const inEnglish = alternate?.language === 'zh-Hans';
@@ -367,8 +371,9 @@ export async function buildSite({ quiet = false } = {}) {
   const posts = await loadPosts();
   const blogPosts = posts.filter((post) => post.category !== 'paper');
   const publications = posts.filter((post) => post.category === 'paper');
-  const latestChinesePost = blogPosts[0]?.zh;
-  const latestPost = latestChinesePost ?? blogPosts[0];
+  const latestEnglishPost = blogPosts[0];
+  const latestChinesePost = latestEnglishPost?.zh;
+  const latestPost = latestChinesePost ?? latestEnglishPost;
   const latestPostLanguage = latestChinesePost ? ' lang="zh-Hans"' : '';
   const siteLanguage = config.language || 'en';
   const greetings = [`Hi, I’m ${config.name} 😊`, '👋 Glad to meet you!'];
@@ -382,10 +387,10 @@ export async function buildSite({ quiet = false } = {}) {
         <div class="socials intro-socials" role="group" aria-label="Social and contact links">${renderSocials(config.socials)}<a class="social-link" href="/contact/" aria-label="Email contact page" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 6 9 7 9-7"/></svg></a></div>
         <div class="about-copy prose">${about}</div>
       </section>
-      ${latestPost ? `<a class="latest-post-card" href="${latestPost.route}"${latestChinesePost ? ` ${readingLinkAttributes(latestPost.route, blogPosts[0].route)}` : ''}>
+      ${latestPost ? `<a class="latest-post-card" href="${latestPost.route}"${latestChinesePost ? ` ${readingLinkAttributes(latestChinesePost.route, latestEnglishPost.route)}` : ''}>
         <span class="eyebrow">Latest post</span>
-        <h2${latestPostLanguage}>${escape(latestPost.title)}</h2>
-        <p${latestPostLanguage}>${escape(latestPost.summary)}</p>
+        <h2${latestPostLanguage}${latestChinesePost ? ` ${readingTextAttributes(latestChinesePost.title, latestEnglishPost.title)}` : ''}>${escape(latestPost.title)}</h2>
+        <p${latestPostLanguage}${latestChinesePost ? ` ${readingTextAttributes(latestChinesePost.summary, latestEnglishPost.summary)}` : ''}>${escape(latestPost.summary)}</p>
         <span class="latest-post-read">Read post ${arrow}</span>
       </a>` : ''}`,
   }));

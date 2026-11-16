@@ -3,6 +3,7 @@ const toggle = document.querySelector('[data-reading-language-toggle]');
 const alternate = toggle.getAttribute('href');
 const pageLanguage = alternate ? document.documentElement.lang : null;
 const readingLinks = document.querySelectorAll('[data-reading-en-href]');
+const readingText = document.querySelectorAll('[data-reading-en-text]');
 let preference = storedLanguage() ?? 'zh-Hans';
 
 function storedLanguage() {
@@ -17,10 +18,15 @@ function alternateUrl() {
   return `${alternate}${location.search}${location.hash}`;
 }
 
-function syncNavigation() {
-  const inEnglish = (pageLanguage ?? preference) === 'en';
+function syncReadingLanguage() {
+  const language = pageLanguage ?? preference;
+  const inEnglish = language === 'en';
   for (const link of readingLinks) {
     link.href = inEnglish ? link.dataset.readingEnHref : link.dataset.readingZhHref;
+  }
+  for (const element of readingText) {
+    element.lang = language;
+    element.textContent = inEnglish ? element.dataset.readingEnText : element.dataset.readingZhText;
   }
 
   if (alternate) {
@@ -36,7 +42,7 @@ function syncNavigation() {
 
 function refreshPreference() {
   preference = storedLanguage() ?? preference;
-  syncNavigation();
+  syncReadingLanguage();
 }
 
 const canonical = document.querySelector('link[rel="canonical"]').href;
@@ -53,7 +59,7 @@ if (defaultChineseRoute && preference === 'en' && !usingHistory) {
     } catch {
       // Language links still work when browser storage is unavailable.
     }
-    if (!alternate) syncNavigation();
+    if (!alternate) syncReadingLanguage();
   });
 
   window.addEventListener('pageshow', refreshPreference);
@@ -61,5 +67,5 @@ if (defaultChineseRoute && preference === 'en' && !usingHistory) {
     if (event.key === storageKey) refreshPreference();
   });
   if (alternate) window.addEventListener('hashchange', () => { toggle.href = alternateUrl(); });
-  syncNavigation();
+  syncReadingLanguage();
 }
