@@ -114,7 +114,7 @@ function renderPostList(posts, selectedCategory = null) {
   return `<ol class="post-list">${posts.map((post) => `
     <li class="post-row category-${post.category}">
       ${post.category === 'paper' ? '' : `<a class="post-category" href="${categoryRoute(post.category)}"${post.category === selectedCategory ? ' aria-current="page"' : ''}><span class="post-category-name">${post.category}</span></a>`}
-      <time datetime="${post.date}">${post.date}</time>
+      <time datetime="${post.date}">${post.date.length === 7 ? escape(formatDate(post.date)) : post.date}</time>
       <a class="post-link" href="${post.route}"><span class="post-title">${escape(post.title)}</span></a>
     </li>`).join('')}</ol>`;
 }
@@ -201,8 +201,8 @@ async function loadPosts() {
       throw new Error(`${file}: use a lowercase, hyphen-separated filename.`);
     }
     const date = data.date instanceof Date ? data.date.toISOString().slice(0, 10) : String(data.date ?? '');
-    if (!data.title || !/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date) {
-      throw new Error(`${file}: a title and a valid date (YYYY-MM-DD) are required.`);
+    if (!data.title || !isPostDate(date)) {
+      throw new Error(`${file}: a title and a valid date (YYYY-MM or YYYY-MM-DD) are required.`);
     }
     if (!content.trim()) throw new Error(`${file}: the post is empty.`);
     const category = data.category ?? 'tech';
@@ -228,8 +228,22 @@ function postExcerpt(content) {
   return characters.length > 160 ? `${characters.slice(0, 160).join('').trimEnd()}…` : characters.join('');
 }
 
-const formatDate = (date, locale = 'en-GB') =>
-  new Intl.DateTimeFormat(locale, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
+function parsePostDate(date) {
+  const calendarDate = date.length === 7 ? `${date}-01` : date;
+  return new Date(`${calendarDate}T12:00:00Z`);
+}
+
+function isPostDate(date) {
+  if (!/^\d{4}-\d{2}(?:-\d{2})?$/.test(date)) return false;
+  const parsed = parsePostDate(date);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, date.length) === date;
+}
+
+function formatDate(date, locale = 'en-GB') {
+  const options = { month: 'long', year: 'numeric', timeZone: 'UTC' };
+  if (date.length === 10) options.day = 'numeric';
+  return new Intl.DateTimeFormat(locale, options).format(parsePostDate(date));
+}
 
 function renderArticleComments(config, post, isChinese, label) {
   const { repo, repoId, category, categoryId, threads } = config;

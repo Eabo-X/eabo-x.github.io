@@ -1,6 +1,6 @@
 ---
 title: "The Junior Crisis and Our Own Reward Functions"
-date: "2026-11-10"
+date: "2026-02"
 category: "reflection"
 draft: false
 ---
