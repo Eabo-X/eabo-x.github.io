@@ -171,10 +171,6 @@ function renderToc(sections) {
   return render(roots);
 }
 
-function readingMinutes(content, unitsPerMinute = 220) {
-  return Math.max(1, Math.ceil((content.match(/[\u3400-\u9FFF]|[\p{L}\p{N}]+/gu) || []).length / unitsPerMinute));
-}
-
 async function loadChinesePost(folder, file, post) {
   const source = await readFile(path.join(folder, 'zh', file), 'utf8').catch((error) => {
     if (error.code !== 'ENOENT') throw error;
@@ -188,7 +184,7 @@ async function loadChinesePost(folder, file, post) {
   }
   return {
     title: data.title, description: data.description || '', summary: data.description || postExcerpt(content),
-    route: `${post.route}zh/`, minutes: readingMinutes(content, 420),
+    route: `${post.route}zh/`,
     ...renderBlogMarkdown(content, `zh/${file}`, post.sections),
   };
 }
@@ -216,7 +212,7 @@ async function loadPosts() {
     const post = {
       title: data.title, description: data.description || '', date, category,
       summary: data.description || postExcerpt(content),
-      slug, route: `${category === 'paper' ? publicationRoute : blogRoute}${slug}/`, minutes: readingMinutes(content),
+      slug, route: `${category === 'paper' ? publicationRoute : blogRoute}${slug}/`,
       ...(category === 'paper' ? { html: marked.parse(content), sections: [] } : renderBlogMarkdown(content, file)),
     };
     post.zh = category === 'paper' ? null : await loadChinesePost(folder, file, post);
@@ -274,7 +270,7 @@ function postPage(config, logo, assetURLs, post, edition = post) {
         <a class="back-link" href="${indexRoute}">${arrow}${backLabel}</a>
         <article>
           <header class="article-header">
-            <div class="post-meta"><a href="${isPublication ? publicationRoute : categoryRoute(post.category)}">${isPublication ? 'Publication' : isChinese ? categoryLabel[post.category] : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(formatDate(post.date, isChinese ? 'zh-CN' : 'en-GB'))}</time><span aria-hidden="true">·</span><span>${isChinese ? `阅读约 ${edition.minutes} 分钟` : `${edition.minutes} min read`}</span></div>
+            <div class="post-meta"><a href="${isPublication ? publicationRoute : categoryRoute(post.category)}">${isPublication ? 'Publication' : isChinese ? categoryLabel[post.category] : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(formatDate(post.date, isChinese ? 'zh-CN' : 'en-GB'))}</time></div>
             <h1>${escape(edition.title)}</h1>
             ${edition.description ? `<p class="page-description">${escape(edition.description)}</p>` : ''}
             ${switchLink}
