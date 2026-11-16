@@ -1,8 +1,5 @@
 const sections = [...document.querySelectorAll('[data-post-section]')];
 const tocLinks = [...document.querySelectorAll('[data-post-toc] a')];
-const languageLink = document.querySelector('[data-post-language]');
-const languageRoute = languageLink?.getAttribute('href');
-const sectionHashes = new Set(tocLinks.map((link) => link.hash));
 let currentHash = '';
 let frame = 0;
 
@@ -31,12 +28,6 @@ function scheduleUpdate() {
   if (!frame) frame = requestAnimationFrame(updateCurrentSection);
 }
 
-function syncLanguageLink() {
-  if (!languageLink) return;
-  const hash = sectionHashes.has(window.location.hash) ? window.location.hash : '';
-  languageLink.setAttribute('href', `${languageRoute}${hash}`);
-}
-
 const mobileToc = document.querySelector('.post-toc-mobile');
 mobileToc?.addEventListener('click', (event) => {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -46,9 +37,5 @@ mobileToc?.addEventListener('click', (event) => {
 window.addEventListener('scroll', scheduleUpdate, { passive: true });
 window.addEventListener('resize', scheduleUpdate);
 window.addEventListener('pageshow', scheduleUpdate);
-window.addEventListener('hashchange', () => {
-  syncLanguageLink();
-  scheduleUpdate();
-});
-syncLanguageLink();
+window.addEventListener('hashchange', scheduleUpdate);
 scheduleUpdate();

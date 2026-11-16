@@ -18,11 +18,12 @@ const icons = {
   linkedin: '<path d="M5.37 24H.4V7.98h4.97V24ZM2.88 5.8a2.89 2.89 0 1 1 0-5.78 2.89 2.89 0 0 1 0 5.78ZM24 24h-4.97v-7.79c0-1.85-.04-4.23-2.58-4.23-2.58 0-2.98 2.02-2.98 4.1V24H8.5V7.98h4.77v2.19h.07c.66-1.26 2.29-2.59 4.7-2.59C23.08 7.58 24 10.9 24 15.21V24Z"/>',
 };
 const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
-const globe = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg>';
 const chevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 const blogRoute = '/blog/';
-const englishBlogRoute = '/en/blog/';
 const publicationRoute = '/publication/';
+const englishRoute = (route) => `/en${route}`;
+const englishBlogRoute = englishRoute(blogRoute);
+const englishPublicationRoute = englishRoute(publicationRoute);
 const blogCategories = ['tech', 'reflection'];
 const categoryRoute = (category, indexRoute = blogRoute) => `${indexRoute}category/${category}/`;
 
@@ -38,10 +39,30 @@ function renderSocials(socials = {}) {
   }).join('');
 }
 
-function shell(config, logo, assetURLs, { title, description, route = '/', active = 'about', body, pageClass = '', language = config.language || 'en', blogHref = blogRoute, alternates = [], readingTools = false, commentBacklink = '' }) {
+function readingAlternates(chinese, english = englishRoute(chinese)) {
+  return [{ language: 'zh-Hans', route: chinese }, { language: 'en', route: english }];
+}
+
+function readingLinkAttributes(chinese, english = englishRoute(chinese)) {
+  return `data-reading-zh-href="${escape(chinese)}" data-reading-en-href="${escape(english)}"`;
+}
+
+function renderReadingLanguageToggle(language, alternates) {
+  const alternate = alternates.find((edition) => edition.language !== language);
+  const inEnglish = alternate?.language === 'zh-Hans';
+  const label = `Switch reading language to ${inEnglish ? 'Chinese' : 'English'}`;
+  const attributes = `class="language-toggle" data-reading-language-toggle aria-label="${label}" title="${label}"`;
+  const icon = `<span class="language-toggle-icon" aria-hidden="true">${inEnglish ? 'EN' : '中'}</span>`;
+  return alternate
+    ? `<a ${attributes} href="${escape(alternate.route)}" hreflang="${escape(alternate.language)}">${icon}</a>`
+    : `<button ${attributes} type="button" hidden>${icon}</button>`;
+}
+
+function shell(config, logo, assetURLs, { title, description, route = '/', active = 'about', body, pageClass = '', language = config.language || 'en', alternates = [], readingTools = false, commentBacklink = '' }) {
   const canonical = new URL(route, config.url).href;
   const siteLanguage = config.language || 'en';
   const chromeLanguage = language === siteLanguage ? '' : ` lang="${escape(siteLanguage)}"`;
+  const inEnglish = alternates.length > 0 && language === 'en';
   return `<!doctype html>
 <html lang="${escape(language)}">
 <head>
@@ -66,6 +87,7 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
   ${['blog-page', 'publication-page', 'post-page'].includes(pageClass) ? `<link rel="preload" href="/assets/fonts/spectral-${pageClass === 'post-page' ? 'light' : 'regular'}-latin.woff2" as="font" type="font/woff2" crossorigin>` : ''}
   <link rel="stylesheet" href="${assetURLs['style.css']}">
   <script type="module" src="${assetURLs['pythagoras.js']}"></script>
+  <script type="module" src="${assetURLs['reading-language.js']}"></script>
   ${pageClass === 'about-page' ? `<script type="module" src="${assetURLs['typewriter.js']}"></script>` : ''}
   ${readingTools ? `<script type="module" src="${assetURLs['post-reading.js']}"></script>` : ''}
   ${commentBacklink ? `<script type="module" src="${assetURLs['post-comments.js']}"></script>` : ''}
@@ -81,11 +103,12 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
           <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
           <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 14.1A8.7 8.7 0 0 1 9.9 3.2 8.7 8.7 0 1 0 20.8 14.1Z"/></svg>
         </button>
+        ${renderReadingLanguageToggle(language, alternates)}
       </div>
       <nav class="main-nav" aria-label="Main navigation">
         <a href="/"${active === 'about' ? ' aria-current="page"' : ''}>About me</a>
-        <a href="${blogHref}"${active === 'blog' ? ' aria-current="page"' : ''}>Blog</a>
-        <a href="${publicationRoute}"${active === 'publication' ? ' aria-current="page"' : ''}>Publication</a>
+        <a href="${inEnglish ? englishBlogRoute : blogRoute}" ${readingLinkAttributes(blogRoute)}${active === 'blog' ? ' aria-current="page"' : ''}>Blog</a>
+        <a href="${inEnglish ? englishPublicationRoute : publicationRoute}" ${readingLinkAttributes(publicationRoute)}${active === 'publication' ? ' aria-current="page"' : ''}>Publication</a>
       </nav>
     </header>
     <main id="main" class="${pageClass}${readingTools ? ' has-toc' : ''}" tabindex="-1">${body}</main>
@@ -109,11 +132,6 @@ function redirectPage(config, route, label) {
 <body><p>This page has moved. <a href="${escape(route)}">Continue to ${escape(label)}</a>.</p></body>
 </html>
 `;
-}
-
-function renderLanguageLink({ route, language }, preserveSection = false) {
-  const label = language === 'zh-Hans' ? '阅读中文版' : 'Read in English';
-  return `<a class="article-language"${preserveSection ? ' data-post-language' : ''} href="${route}" hreflang="${language}" lang="${language}"><span>${globe}${label}</span></a>`;
 }
 
 function renderPostList(posts, selectedCategory = null, isChinese = false) {
@@ -171,6 +189,11 @@ function renderBlogMarkdown(content, file, originalSections = null) {
   return { html: parser.parser(tokens), sections };
 }
 
+function renderPostContent(content, file, category, originalSections = null) {
+  if (category === 'paper') return { html: marked.parse(content), sections: [] };
+  return renderBlogMarkdown(content, file, originalSections);
+}
+
 function renderToc(sections) {
   const roots = [];
   const parents = [];
@@ -199,7 +222,7 @@ async function loadChinesePost(folder, file, post) {
   return {
     title: data.title, description: data.description || '', summary: data.description || postExcerpt(content, '阅读全文。'),
     route: post.route,
-    ...renderBlogMarkdown(content, `zh/${file}`, post.sections),
+    ...renderPostContent(content, `zh/${file}`, post.category, post.sections),
   };
 }
 
@@ -226,10 +249,10 @@ async function loadPosts() {
       layout: data.layout,
       summary: data.description || postExcerpt(content),
       slug, route: `${category === 'paper' ? publicationRoute : blogRoute}${slug}/`,
-      ...(category === 'paper' ? { html: marked.parse(content), sections: [] } : renderBlogMarkdown(content, file)),
+      ...renderPostContent(content, file, category),
     };
-    post.zh = category === 'paper' ? null : await loadChinesePost(folder, file, post);
-    if (post.zh) post.route = `${englishBlogRoute}${slug}/`;
+    post.zh = await loadChinesePost(folder, file, post);
+    if (post.zh) post.route = englishRoute(post.route);
     posts.push(post);
   }
   return posts.sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
@@ -278,34 +301,33 @@ function postPage(config, logo, assetURLs, post, edition = post) {
   const isChinese = edition === post.zh;
   const isEssay = post.layout === 'essay';
   const siteLanguage = config.language || 'en';
-  const language = isChinese ? 'zh-Hans' : siteLanguage;
+  const language = isChinese ? 'zh-Hans' : 'en';
   const navLanguage = isChinese ? ` lang="${escape(siteLanguage)}"` : '';
-  const alternates = post.zh ? [{ language: siteLanguage, route: post.route }, { language: 'zh-Hans', route: post.zh.route }] : [];
-  const other = post.zh ? alternates[isChinese ? 0 : 1] : null;
-  const indexRoute = isPublication ? publicationRoute : isChinese ? blogRoute : englishBlogRoute;
+  const alternates = post.zh ? readingAlternates(post.zh.route, post.route) : [];
+  const inEnglish = Boolean(post.zh) && !isChinese;
+  const indexRoute = isPublication ? publicationRoute : blogRoute;
+  const metaRoute = isPublication ? publicationRoute : categoryRoute(post.category);
   const backLabel = isPublication ? 'All publications' : 'All posts';
   const tocLabel = isChinese ? '本文目录' : 'On this page';
   const comments = !isPublication && config.blogComments?.categoryId ? config.blogComments : null;
   const commentsLabel = isChinese ? '评论' : 'Comments';
   const sections = comments && edition.sections.length ? [...edition.sections, { id: 'comments', label: commentsLabel, depth: 2 }] : edition.sections;
   const toc = sections.length ? renderToc(sections) : '';
-  const switchLink = other ? renderLanguageLink(other, true) : '';
   const dateLabel = formatDate(post.date, isChinese ? 'zh-CN' : 'en-GB');
   return shell(config, logo, assetURLs, {
     title: `${edition.title} — ${config.name}`, description: edition.description || edition.summary,
     route: edition.route, active: isPublication ? 'publication' : 'blog', pageClass: 'post-page',
-    language, blogHref: isPublication ? blogRoute : indexRoute, alternates, readingTools: Boolean(toc),
+    language, alternates, readingTools: Boolean(toc),
     commentBacklink: comments ? (post.zh ?? post).route : '',
     body: `<div class="post-reading">
       ${toc ? `<nav class="post-toc post-toc-desktop" data-post-toc aria-label="${tocLabel}"><p class="post-toc-label" aria-hidden="true">${tocLabel}</p>${toc}</nav>` : ''}
       <div class="post-reading-main">
-        <a class="back-link" href="${indexRoute}"${navLanguage}>${arrow}${backLabel}</a>
+        <a class="back-link" href="${inEnglish ? englishRoute(indexRoute) : indexRoute}" ${readingLinkAttributes(indexRoute)}${navLanguage}>${arrow}${backLabel}</a>
         <article${isEssay ? ' class="article-essay"' : ''}>
           <header class="article-header">
-            <div class="post-meta"><a href="${isPublication ? publicationRoute : categoryRoute(post.category, indexRoute)}"${navLanguage}>${isPublication ? 'Publication' : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(dateLabel)}</time></div>
+            <div class="post-meta"><a href="${inEnglish ? englishRoute(metaRoute) : metaRoute}" ${readingLinkAttributes(metaRoute)}${navLanguage}>${isPublication ? 'Publication' : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(dateLabel)}</time></div>
             <h1>${escape(edition.title)}</h1>
             ${edition.description ? `<p class="page-description">${escape(edition.description)}</p>` : ''}
-            ${switchLink}
           </header>
           ${toc ? `<details class="post-toc-mobile"><summary>${tocLabel}${chevron}</summary><nav class="post-toc" data-post-toc aria-label="${tocLabel}">${toc}</nav></details>` : ''}
           <div class="article-body prose">${edition.html}</div>
@@ -321,7 +343,7 @@ export async function buildSite({ quiet = false } = {}) {
   if (!config.name || !config.url) throw new Error('site.config.json requires name and url.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.email || '')) throw new Error('site.config.json requires a valid email.');
   const assetURLs = Object.fromEntries(await Promise.all(
-    ['style.css', 'theme.js', 'pythagoras.js', 'typewriter.js', 'post-reading.js', 'post-comments.js'].map(async (file) => {
+    ['style.css', 'theme.js', 'pythagoras.js', 'typewriter.js', 'reading-language.js', 'post-reading.js', 'post-comments.js'].map(async (file) => {
       const content = await readFile(path.join(root, 'public/assets', file));
       const version = createHash('sha256').update(content).digest('hex').slice(0, 12);
       return [file, `/assets/${file}?v=${version}`];
@@ -349,7 +371,7 @@ export async function buildSite({ quiet = false } = {}) {
         <div class="socials intro-socials" role="group" aria-label="Social and contact links">${renderSocials(config.socials)}<a class="social-link" href="/contact/" aria-label="Email contact page" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 6 9 7 9-7"/></svg></a></div>
         <div class="about-copy prose">${about}</div>
       </section>
-      ${latestPost ? `<a class="latest-post-card" href="${latestPost.route}">
+      ${latestPost ? `<a class="latest-post-card" href="${latestPost.route}"${latestChinesePost ? ` ${readingLinkAttributes(latestPost.route, blogPosts[0].route)}` : ''}>
         <span class="eyebrow">Latest post</span>
         <h2${latestPostLanguage}>${escape(latestPost.title)}</h2>
         <p${latestPostLanguage}>${escape(latestPost.summary)}</p>
@@ -360,10 +382,7 @@ export async function buildSite({ quiet = false } = {}) {
   const blogIndexRoutes = [];
   for (const selectedCategory of [null, ...blogCategories]) {
     const visiblePosts = selectedCategory ? blogPosts.filter((post) => post.category === selectedCategory) : blogPosts;
-    const alternates = [
-      { language: 'zh-Hans', route: selectedCategory ? categoryRoute(selectedCategory) : blogRoute },
-      { language: siteLanguage, route: selectedCategory ? categoryRoute(selectedCategory, englishBlogRoute) : englishBlogRoute },
-    ];
+    const alternates = readingAlternates(selectedCategory ? categoryRoute(selectedCategory) : blogRoute);
     for (const { language, route } of alternates) {
       const isChinese = language === 'zh-Hans';
       const indexRoute = isChinese ? blogRoute : englishBlogRoute;
@@ -375,20 +394,16 @@ export async function buildSite({ quiet = false } = {}) {
         </a>`).join('')}</nav>`;
       const postList = visiblePosts.length ? renderPostList(visiblePosts, selectedCategory, isChinese)
         : `<p class="blog-empty">${isChinese ? '还没有文章。' : 'No posts yet.'}</p>`;
-      const switchLink = renderLanguageLink(alternates[isChinese ? 1 : 0]);
       blogIndexRoutes.push(route);
       pages.set(`${route.slice(1)}index.html`, shell(config, logo, assetURLs, {
         title: `${selectedCategory ? `${selectedCategory} — ` : ''}${blogTitle} — ${config.name}`,
-        route, language, blogHref: indexRoute, alternates, active: 'blog', pageClass: 'blog-page',
+        route, language, alternates, active: 'blog', pageClass: 'blog-page',
         description: isChinese ? `${config.name} 的博客。` : `${selectedCategory ? `${selectedCategory} notes` : 'Notes, ideas, and writing'} by ${config.name}.`,
         body: `<h1 class="sr-only" id="blog-title"${selectedCategory ? navLanguage : ''}>${selectedCategory || blogTitle}</h1>
         <section class="blog-index" aria-labelledby="blog-title">
           ${categoryNav}
           <div class="blog-posts">
-            <div class="blog-list-tools">
-              ${selectedCategory ? `<a class="back-link" href="${indexRoute}"${navLanguage}>${arrow}All posts</a>` : ''}
-              ${switchLink}
-            </div>
+            ${selectedCategory ? `<a class="back-link" href="${indexRoute}"${navLanguage}>${arrow}All posts</a>` : ''}
             ${postList}
           </div>
         </section>`,
@@ -396,12 +411,18 @@ export async function buildSite({ quiet = false } = {}) {
     }
   }
 
-  pages.set(`${publicationRoute.slice(1)}index.html`, shell(config, logo, assetURLs, {
-    title: `Publication — ${config.name}`, route: publicationRoute, active: 'publication', pageClass: 'publication-page',
-    description: `Research publications by ${config.name}.`,
-    body: `<h1 class="publication-title">Publication</h1>
-      ${publications.length ? renderPostList(publications) : '<p class="page-description">No publications yet.</p>'}`,
-  }));
+  const publicationAlternates = readingAlternates(publicationRoute);
+  for (const { language, route } of publicationAlternates) {
+    const isChinese = language === 'zh-Hans';
+    const headingLanguage = isChinese ? ` lang="${escape(siteLanguage)}"` : '';
+    pages.set(`${route.slice(1)}index.html`, shell(config, logo, assetURLs, {
+      title: `Publication — ${config.name}`, route, language, alternates: publicationAlternates,
+      active: 'publication', pageClass: 'publication-page',
+      description: isChinese ? `${config.name} 的研究出版物。` : `Research publications by ${config.name}.`,
+      body: `<h1 class="publication-title"${headingLanguage}>Publication</h1>
+        ${publications.length ? renderPostList(publications, null, isChinese) : `<p class="page-description">${isChinese ? '暂无出版物。' : 'No publications yet.'}</p>`}`,
+    }));
+  }
   pages.set(`${categoryRoute('paper').slice(1)}index.html`, redirectPage(config, publicationRoute, 'Publication'));
 
   for (const post of posts) {
@@ -412,7 +433,10 @@ export async function buildSite({ quiet = false } = {}) {
       // Keep previously shared Chinese URLs, including their section links.
       pages.set(`${post.zh.route.slice(1)}zh/index.html`, chinesePage);
     }
-    if (post.category === 'paper') pages.set(`blog/${post.slug}/index.html`, redirectPage(config, post.route, post.title));
+    if (post.category === 'paper') {
+      const defaultEdition = post.zh ?? post;
+      pages.set(`blog/${post.slug}/index.html`, redirectPage(config, defaultEdition.route, defaultEdition.title));
+    }
   }
 
   const profileHandle = (url) => url ? `@${new URL(url).pathname.split('/').filter(Boolean)[0]}` : '';
@@ -443,7 +467,8 @@ export async function buildSite({ quiet = false } = {}) {
   pages.set('.nojekyll', '');
   pages.set('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${new URL('/sitemap.xml', config.url).href}\n`);
   const postRoutes = posts.flatMap((post) => post.zh ? [post.route, post.zh.route] : [post.route]);
-  pages.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', ...blogIndexRoutes, publicationRoute, '/contact/', ...postRoutes].map((route) => `<url><loc>${escape(new URL(route, config.url).href)}</loc></url>`).join('')}</urlset>\n`);
+  const publicationIndexRoutes = publicationAlternates.map(({ route }) => route);
+  pages.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', ...blogIndexRoutes, ...publicationIndexRoutes, '/contact/', ...postRoutes].map((route) => `<url><loc>${escape(new URL(route, config.url).href)}</loc></url>`).join('')}</urlset>\n`);
 
   // All content is rendered before replacing dist, so invalid posts fail the build early.
   await rm(output, { recursive: true, force: true });
