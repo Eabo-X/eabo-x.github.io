@@ -441,7 +441,7 @@ export async function buildSite({ quiet = false } = {}) {
       active: 'publication', pageClass: 'publication-page',
       description: isChinese ? `${config.name} 的研究出版物。` : `Research publications by ${config.name}.`,
       body: `<h1 class="publication-title"${headingLanguage}>Publication</h1>
-        ${publications.length ? renderPostList(publications, null, isChinese) : `<p class="page-description">${isChinese ? '暂无出版物。' : 'No publications yet.'}</p>`}`,
+        ${publications.length ? renderPostList(publications, null, isChinese) : ''}`,
     }));
   }
   pages.set(`${categoryRoute('paper').slice(1)}index.html`, redirectPage(config, publicationRoute, 'Publication'));
