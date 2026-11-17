@@ -308,10 +308,14 @@ function formatDate(date, locale = 'en-GB', month = 'long') {
 function renderArticleComments(config, post, isChinese, label) {
   const { repo, repoId, category, categoryId, threads } = config;
   const number = threads?.[post.slug];
-  const discussion = `https://github.com/${repo}/discussions${number ? `/${number}` : ''}`;
+  const discussionLink = number
+    ? `<a href="${escape(`https://github.com/${repo}/discussions/${number}`)}">${isChinese ? '在 GitHub 查看讨论' : 'View on GitHub'}</a>`
+    : '';
   return `<section class="article-comments" aria-labelledby="comments">
-    <h2 id="comments" tabindex="-1" data-post-section>${label}</h2>
-    <p>${isChinese ? '使用 GitHub 账号留言。' : 'Sign in with GitHub to leave a comment.'} <a href="${escape(discussion)}">${isChinese ? '在 GitHub 查看讨论' : 'View on GitHub'}</a></p>
+    <div class="article-comments-heading">
+      <h2 id="comments" tabindex="-1" data-post-section>${label}</h2>
+      ${discussionLink}
+    </div>
     <div class="giscus" data-comment-widget data-repo="${escape(repo)}" data-repo-id="${escape(repoId)}" data-category="${escape(category)}" data-category-id="${escape(categoryId)}" data-lang="${isChinese ? 'zh-CN' : 'en'}" data-mapping="${number ? 'number' : 'specific'}" data-term="${escape(number || `blog/${post.slug}`)}"></div>
   </section>`;
 }

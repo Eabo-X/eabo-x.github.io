@@ -231,9 +231,9 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
 .article-body { max-width: 650px; font-size: 17px; line-height: 1.65; }
 [data-post-section] { scroll-margin-top: 28px; }
 .article-comments { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line); }
-.article-comments h2 { margin: 0 0 6px; font-size: 22px; font-weight: 600; }
-.article-comments p { margin: 0 0 20px; color: var(--muted); font-size: 14px; line-height: 1.6; }
-.article-comments a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.article-comments-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 12px; }
+.article-comments-heading h2 { margin: 0; font-size: 22px; font-weight: 600; }
+.article-comments-heading a { color: var(--accent); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
 .article-comments .giscus { max-width: 100%; }
 .article-body.prose p { margin-bottom: 1em; }
 .article-body.prose :is(h1, h2, h3) { font-family: var(--blog-serif); font-weight: 600; }
