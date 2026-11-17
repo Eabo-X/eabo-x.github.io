@@ -1,3 +1,4 @@
+const siteHeader = document.querySelector('.site-header');
 const sections = [...document.querySelectorAll('[data-post-section]')];
 const tocLinks = [...document.querySelectorAll('[data-post-toc] a')];
 let currentHash = '';
@@ -5,7 +6,8 @@ let frame = 0;
 
 function updateCurrentSection() {
   frame = 0;
-  const threshold = Math.min(104, window.innerHeight * 0.25);
+  const headerBottom = siteHeader.getBoundingClientRect().bottom;
+  const threshold = headerBottom + Math.min(104, (window.innerHeight - headerBottom) * 0.25);
   let section;
   for (const heading of sections) {
     if (heading.getBoundingClientRect().top > threshold) break;

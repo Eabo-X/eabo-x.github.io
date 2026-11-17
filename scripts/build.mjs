@@ -99,6 +99,7 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
   <script src="${assetURLs['theme.js']}"></script>
   ${['blog-page', 'publication-page', 'post-page'].includes(pageClass) ? `<link rel="preload" href="/assets/fonts/spectral-${pageClass === 'post-page' ? 'light' : 'regular'}-latin.woff2" as="font" type="font/woff2" crossorigin>` : ''}
   <link rel="stylesheet" href="${assetURLs['style.css']}">
+  <script type="module" src="${assetURLs['site-header.js']}"></script>
   <script type="module" src="${assetURLs['pythagoras.js']}"></script>
   <script type="module" src="${assetURLs['reading-language.js']}"></script>
   ${pageClass === 'about-page' ? `<script type="module" src="${assetURLs['typewriter.js']}"></script>` : ''}
@@ -110,24 +111,28 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
   <a class="skip-link" href="#main"${chromeLanguage}>Skip to content</a>
   <div class="site-shell">
     <header class="site-header"${chromeLanguage}>
-      <div class="site-brand">
-        <a class="wordmark" href="/" aria-label="${escape(config.name)} home"><span class="wordmark-logo" aria-hidden="true">${logo}</span><span>${escape(config.name)}</span></a>
-        <div class="site-controls">
-          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Switch to dark mode" hidden>
-            <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
-            <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 14.1A8.7 8.7 0 0 1 9.9 3.2 8.7 8.7 0 1 0 20.8 14.1Z"/></svg>
-          </button>
-          ${renderReadingLanguageToggle(language, alternates)}
+      <div class="site-frame site-header-inner">
+        <div class="site-brand">
+          <a class="wordmark" href="/" aria-label="${escape(config.name)} home"><span class="wordmark-logo" aria-hidden="true">${logo}</span><span>${escape(config.name)}</span></a>
+          <div class="site-controls">
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Switch to dark mode" hidden>
+              <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+              <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 14.1A8.7 8.7 0 0 1 9.9 3.2 8.7 8.7 0 1 0 20.8 14.1Z"/></svg>
+            </button>
+            ${renderReadingLanguageToggle(language, alternates)}
+          </div>
         </div>
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="/"${active === 'about' ? ' aria-current="page"' : ''}>About me</a>
+          <a href="${inEnglish ? englishBlogRoute : blogRoute}" ${readingLinkAttributes(blogRoute)}${active === 'blog' ? ' aria-current="page"' : ''}>Blog</a>
+          <a href="${inEnglish ? englishPublicationRoute : publicationRoute}" ${readingLinkAttributes(publicationRoute)}${active === 'publication' ? ' aria-current="page"' : ''}>Publication</a>
+        </nav>
       </div>
-      <nav class="main-nav" aria-label="Main navigation">
-        <a href="/"${active === 'about' ? ' aria-current="page"' : ''}>About me</a>
-        <a href="${inEnglish ? englishBlogRoute : blogRoute}" ${readingLinkAttributes(blogRoute)}${active === 'blog' ? ' aria-current="page"' : ''}>Blog</a>
-        <a href="${inEnglish ? englishPublicationRoute : publicationRoute}" ${readingLinkAttributes(publicationRoute)}${active === 'publication' ? ' aria-current="page"' : ''}>Publication</a>
-      </nav>
     </header>
-    <main id="main" class="${pageClass}${readingTools ? ' has-toc' : ''}" tabindex="-1">${body}</main>
-    ${route === '/' ? '' : `<nav class="page-home" aria-label="Return to homepage"${chromeLanguage}><a class="home-link" href="/"><span aria-hidden="true">←</span>Home</a></nav>`}
+    <div class="site-frame site-content">
+      <main id="main" class="${pageClass}${readingTools ? ' has-toc' : ''}" tabindex="-1">${body}</main>
+      ${route === '/' ? '' : `<nav class="page-home" aria-label="Return to homepage"${chromeLanguage}><a class="home-link" href="/"><span aria-hidden="true">←</span>Home</a></nav>`}
+    </div>
   </div>
 </body>
 </html>
@@ -358,7 +363,7 @@ export async function buildSite({ quiet = false } = {}) {
   if (!config.name || !config.url) throw new Error('site.config.json requires name and url.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.email || '')) throw new Error('site.config.json requires a valid email.');
   const assetURLs = Object.fromEntries(await Promise.all(
-    ['style.css', 'theme.js', 'pythagoras.js', 'typewriter.js', 'reading-language.js', 'post-reading.js', 'post-comments.js'].map(async (file) => {
+    ['style.css', 'theme.js', 'site-header.js', 'pythagoras.js', 'typewriter.js', 'reading-language.js', 'post-reading.js', 'post-comments.js'].map(async (file) => {
       const content = await readFile(path.join(root, 'public/assets', file));
       const version = createHash('sha256').update(content).digest('hex').slice(0, 12);
       return [file, `/assets/${file}?v=${version}`];
