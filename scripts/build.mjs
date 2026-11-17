@@ -159,7 +159,7 @@ function renderPostList(posts, selectedCategory = null, isChinese = false) {
     else if (post.date.length === 7) dateLabel = formatDate(post.date);
     return `
     <li class="post-row category-${post.category}">
-      ${post.category === 'paper' ? '' : `<a class="post-category" href="${categoryRoute(post.category, indexRoute)}"${isChinese ? ' lang="en"' : ''}${post.category === selectedCategory ? ' aria-current="page"' : ''}><span class="post-category-name">${post.category}</span></a>`}
+      ${post.category === 'paper' ? '' : `<a class="post-category" href="${categoryRoute(post.category, indexRoute)}" aria-label="${post.category}"${isChinese ? ' lang="en"' : ''}${post.category === selectedCategory ? ' aria-current="page"' : ''}><span class="category-swatch" aria-hidden="true"></span></a>`}
       <time datetime="${post.date}">${escape(dateLabel)}</time>
       <a class="post-link" href="${edition.route}"${isChinese && edition === post ? ' lang="en"' : ''}><span class="post-title">${escape(edition.title)}</span></a>
     </li>`;
