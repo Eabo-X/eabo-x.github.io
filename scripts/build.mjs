@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { Marked, marked } from 'marked';
 import matter from 'gray-matter';
+import { ensureBlogDiscussions } from './blog-discussions.mjs';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 export const output = path.join(root, 'dist');
@@ -307,7 +308,7 @@ function formatDate(date, locale = 'en-GB', month = 'long') {
 
 function renderArticleComments(config, post, isChinese, label) {
   const { repo, repoId, category, categoryId, threads } = config;
-  const number = threads?.[post.slug];
+  const number = threads && Object.hasOwn(threads, post.slug) ? threads[post.slug] : undefined;
   const discussionLink = number
     ? `<a href="${escape(`https://github.com/${repo}/discussions/${number}`)}">${isChinese ? '在 GitHub 查看讨论' : 'View on GitHub'}</a>`
     : '';
@@ -362,7 +363,7 @@ function postPage(config, logo, assetURLs, post, edition = post) {
   });
 }
 
-export async function buildSite({ quiet = false } = {}) {
+export async function buildSite({ quiet = false, discussionToken } = {}) {
   const config = JSON.parse(await readFile(path.join(root, 'site.config.json'), 'utf8'));
   if (!config.name || !config.url) throw new Error('site.config.json requires name and url.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.email || '')) throw new Error('site.config.json requires a valid email.');
@@ -379,6 +380,10 @@ export async function buildSite({ quiet = false } = {}) {
   const about = marked.parse(await readFile(path.join(root, 'content/about.md'), 'utf8'));
   const posts = await loadPosts();
   const blogPosts = posts.filter((post) => post.category !== 'paper');
+  if (discussionToken) {
+    const threads = await ensureBlogDiscussions(config.blogComments, blogPosts, config.url, discussionToken);
+    config.blogComments.threads = threads;
+  }
   const publications = posts.filter((post) => post.category === 'paper');
   const latestEnglishPost = blogPosts[0];
   const latestChinesePost = latestEnglishPost?.zh;
@@ -508,5 +513,9 @@ export async function buildSite({ quiet = false } = {}) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  await buildSite();
+  const provisionDiscussions = process.argv.includes('--provision-discussions');
+  if (provisionDiscussions && !process.env.GITHUB_TOKEN) {
+    throw new Error('Publishing blog discussions requires GITHUB_TOKEN.');
+  }
+  await buildSite({ discussionToken: provisionDiscussions ? process.env.GITHUB_TOKEN : undefined });
 }
