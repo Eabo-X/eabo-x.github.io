@@ -29,7 +29,7 @@
 
 :root {
   color-scheme: light;
-  --site-header-min-height: 126px;
+  --site-header-min-height: 60px;
   --site-header-height: var(--site-header-min-height);
   --paper: #faf9f6;
   --ink: #292b27;
@@ -95,7 +95,7 @@ main:focus { outline: none; }
 .skip-link { position: fixed; top: -80px; left: 24px; padding: 12px 18px; background: var(--ink); color: var(--paper); z-index: 10; }
 .skip-link:focus { top: 16px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-.site-header { position: sticky; inset-block-start: 0; z-index: 5; flex-shrink: 0; background: var(--paper); }
+.site-header { position: sticky; inset-block-start: 0; z-index: 5; flex-shrink: 0; background: var(--paper); box-shadow: inset 0 -1px var(--line); }
 .site-header-inner { min-height: var(--site-header-min-height); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .site-brand { display: flex; align-items: center; gap: 4px; flex: none; }
 .site-controls { display: flex; }
@@ -290,7 +290,6 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
   .publication-page .post-link { padding-top: 0; }
 }
 @media (max-width: 600px) {
-  :root { --site-header-min-height: 100px; }
   .site-frame { width: calc(100% - 48px); }
   .site-header-inner { gap: 16px; }
   .wordmark { font-size: 24px; }
@@ -327,8 +326,8 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
   .not-found-page { padding-top: 70px; }
 }
 @media (max-width: 480px) {
-  :root { --site-header-min-height: 110px; }
-  .site-header-inner { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; padding-block: 14px 8px; }
+  :root { --site-header-min-height: 94px; }
+  .site-header-inner { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; padding-block: 4px 2px; }
 }
 @media (max-width: 360px) {
   .wordmark { gap: 8px; font-size: 21px; letter-spacing: -.7px; }
