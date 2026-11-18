@@ -137,7 +137,7 @@ h1 { font-family: var(--serif); font-weight: 400; letter-spacing: -3.2px; line-h
 .accent { color: var(--accent); }
 .about-copy { max-width: 620px; color: var(--muted); font-size: 19px; line-height: 1.85; }
 .about-copy > :last-child { margin-bottom: 0; }
-.latest-posts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 16px; margin-top: 68px; }
+.latest-posts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 68px; }
 .latest-post-card { display: flex; flex-direction: column; min-width: 0; padding: 27px 28px; border: 1px solid var(--line); border-radius: 4px; transition: border-color 180ms ease; }
 .latest-post-card .eyebrow { font-size: 9px; letter-spacing: 1.7px; text-transform: uppercase; }
 .latest-post-card h2 { font-family: var(--serif); font-size: 30px; font-weight: 400; letter-spacing: -.6px; line-height: 1.35; margin: 13px 0 11px; overflow-wrap: anywhere; }
