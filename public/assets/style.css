@@ -138,12 +138,12 @@ h1 { font-family: var(--serif); font-weight: 400; letter-spacing: -3.2px; line-h
 .about-copy { max-width: 620px; color: var(--muted); font-size: 19px; line-height: 1.85; }
 .about-copy > :last-child { margin-bottom: 0; }
 .latest-posts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 68px; }
-.latest-post-card { display: flex; flex-direction: column; min-width: 0; padding: 27px 28px; border: 1px solid var(--line); border-radius: 4px; transition: border-color 180ms ease; }
+.latest-post-card { display: flex; flex-direction: column; min-width: 0; padding: 21px 28px; border: 1px solid var(--line); border-radius: 4px; transition: border-color 180ms ease; }
 .latest-post-card .eyebrow { font-size: 9px; letter-spacing: 1.7px; text-transform: uppercase; }
-.latest-post-card h2 { font-family: var(--serif); font-size: 30px; font-weight: 400; letter-spacing: -.6px; line-height: 1.35; margin: 13px 0 11px; overflow-wrap: anywhere; }
+.latest-post-card h2 { font-family: var(--serif); font-size: 30px; font-weight: 400; letter-spacing: -.6px; line-height: 1.35; margin: 10px 0 8px; overflow-wrap: anywhere; }
 .latest-post-card h2:lang(zh-Hans) { font-family: var(--chinese-serif); letter-spacing: normal; }
 .latest-post-card p { font-size: 14px; color: var(--muted); line-height: 1.8; margin: 0; overflow-wrap: anywhere; }
-.latest-post-read { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 19px; font-size: 12px; color: var(--accent); }
+.latest-post-read { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 14px; font-size: 12px; color: var(--accent); }
 .latest-post-read svg { width: 17px; height: 17px; }
 .latest-post-card:hover { border-color: var(--card-hover); }
 .socials { display: flex; align-items: center; gap: 1px; }
@@ -314,7 +314,7 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
   h1 { font-size: clamp(48px, 13vw, 66px); letter-spacing: -2.3px; margin-top: 28px; margin-bottom: 26px; }
   .about-copy { font-size: 17px; }
   .latest-posts { margin-top: 52px; }
-  .latest-post-card { padding: 22px; }
+  .latest-post-card { padding: 18px 22px; }
   .latest-post-card h2 { font-size: 26px; }
   .latest-post-card p { font-size: 13px; }
   .socials { gap: 0; }
