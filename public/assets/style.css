@@ -150,6 +150,7 @@ h1 { font-family: var(--serif); font-weight: 400; letter-spacing: -3.2px; line-h
 .intro-socials { margin: 0 0 24px -13px; }
 .social-link { width: 44px; height: 44px; display: grid; place-items: center; color: var(--social); transition: color 160ms ease, transform 160ms ease; }
 .social-link svg { width: 17px; height: 17px; }
+.social-link .social-icon-xiaohongshu { width: 26px; height: 26px; }
 a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
 .social-link.is-pending { color: var(--pending); cursor: default; }
 .page-description { color: var(--muted); font-size: 17px; line-height: 1.8; margin-bottom: 0; overflow-wrap: anywhere; }

@@ -21,7 +21,7 @@ draft: false
 
 ### 1a. 问题：标准残差下，深层很难再拿到浅层的表示
 
-<p>标准残差（每一层把自己的输出直接加回 residual stream）让每一层只能读到一样东西：此前所有层输出的等权总和。浅层的信息还在这个总和里，但会被埋没、被平均、被压缩，而且没有办法单独取回。具体有四个问题。</p>
+<p>标准残差（每一层把自己的输出直接加回 residual stream）让每一层只能读到一样东西：此前所有层输出的等权总和。浅层的信息还在这个总和里，但会被埋没、被平均、被压缩，而且没有办法单独取回。具体有三个问题。</p>
 
 <p><strong>uniform aggregation</strong>（均匀聚合）。把残差展开：记 v_0 为 embedding，f_j 为第 j 层的变换（attention或 MLP 子层），v_j 为它的输出，α_{j→ℓ} 为第 j 层的输出在第 ℓ 层输入 h_ℓ 中的权重。第 ℓ 层读到的是：</p>
 
@@ -66,27 +66,11 @@ draft: false
 
 <p>真实模型不会坍缩到秩 1：同一篇论文指出，skip connection 和 MLP 能阻止这种退化。所以representation collapse 是一种倾向，而不是终点；Noci 等（NeurIPS 2022）进一步说明，token 表示一旦高度对齐，Q、K 的梯度会趋于消失。</p>
 
-<p><strong>compression valley</strong>（压缩谷）。中间层表示的矩阵熵大幅下降、之后再回升，形成一个“谷”。矩阵熵的定义是：把表示矩阵 X 的奇异值 σ_k 的平方归一化成一个分布 p_k，再取它的熵；熵越低，表示越集中在少数几个方向上：</p>
-
-<div class="post-equation"><img src="/assets/posts/representation-pump/equation-09.png" alt="p_k = σ_k² / Σ_i σ_i², H = −Σ_k p_k log p_k" width="243" height="53" loading="lazy" decoding="async"></div>
-
-<p>&gt;&lt;former（Variable-Width Transformer，中间层窄、两头宽，见 2c）也在等宽基线（所有层同宽的标准 Transformer）上观察到这一现象。Queipo-de-Llano 等（2025）把它和 attention sink（少数token，通常是 BOS，吸走大部分注意力权重的现象）追溯到同一个原因：residual stream 中的 massive activations，即极少数比其他大出约 100,000 倍、取值基本不随输入变化的激活（Sun 等，COLM 2024）。BOS token（序列开头的特殊 token）在中间层出现极大的激活范数时，compression valley 和attention sink 同时出现；论文证明 massive activations 必然带来表示压缩，实验覆盖 410M 到 120B 的模型。直观地看：设表示矩阵 X 中 BOS 那一行的范数为 M，其余各行的平方范数之和为 R；σ_1 为最大奇异值，‖X‖_F 为 Frobenius 范数（所有元素平方和的平方根），则：</p>
-
-<div class="post-equation"><img src="/assets/posts/representation-pump/equation-10.png" alt="σ_1² ≥ M², Σ_k σ_k² = ‖X‖_F² = M² + R" width="270" height="44" loading="lazy" decoding="async"></div>
-
-<p>所以最大奇异值所占的比例满足：</p>
-
-<div class="post-equation"><img src="/assets/posts/representation-pump/equation-11.png" alt="p_1 = σ_1² / Σ_k σ_k² ≥ M² / (M² + R)" width="167" height="51" loading="lazy" decoding="async"></div>
-
-<p>当 BOS 的激活范数远大于其余各行时，奇异值的分布集中到一个方向上，矩阵熵趋于 0：</p>
-
-<div class="post-equation"><img src="/assets/posts/representation-pump/equation-12.png" alt="M² ≫ R ⇒ p_1 → 1, H → 0" width="231" height="30" loading="lazy" decoding="async"></div>
-
 <p>这些问题的共同后果是深层没有被充分利用：AttnRes 引用的经验结果是，相当一部分层可以剪掉而几乎不损失性能（Gromov 等，2024）。而且表示一旦被稀释，很难从当前状态重新算出来：&gt;&lt;former 的消融中，层重新变宽时如果训练一个投影层（用可学矩阵把窄表示映射回宽维度）来补回维度，loss 是 3.150，比等宽基线（3.138）还差。我的理解是，要拿回浅层表示，只能回到源头去取。</p>
 
 ### 1b. 为什么 representation pump 有用
 
-<p>两种 pump 的共同点是让深层绕过那个累加起来的总和，直接读到浅层的表示；区别在于读的是谁（当前token 自己，还是此前各 token）、从哪里进入（residual stream，还是注意力的 K/V）。它们对 1a 中前三个问题的缓解方式如下：</p>
+<p>两种 pump 的共同点是让深层绕过那个累加起来的总和，直接读到浅层的表示；区别在于读的是谁（当前token 自己，还是此前各 token）、从哪里进入（residual stream，还是注意力的 K/V）。它们对 1a 中三个问题的缓解方式如下：</p>
 
 <div class="post-table" tabindex="0" role="region" aria-label="表格">
 <table><thead>
@@ -103,7 +87,7 @@ draft: false
 <ul>
 <li>&gt;&lt;former 的消融中，层重新变宽时有两种补维度的方式：补零（新增坐标填 0）和 carry-forward（从之前处理过该坐标的层原样复制）。两者形状完全相同，区别只在是否保留浅层的值：loss 3.124对 3.099。</li>
 <li>AttnRes（用注意力取回此前各层的输出，见 2a）在 48B 模型上的训练分析显示，它缓解了 PreNorm dilution：输出幅度沿深度保持有界，梯度范数在各层分布更均匀。</li>
-<li>LIMe（每个注意力头从此前所有层取 K/V，见 3b）在深层保持了更高的 value 熵（value 矩阵的矩阵熵，定义见 1a），深层 value 的线性可分性（用线性分类器区分不同 token 的容易程度）也更好。</li>
+<li>LIMe（每个注意力头从此前所有层取 K/V，见 3b）在深层保持了更高的 value 熵（value 矩阵的矩阵熵），深层 value 的线性可分性（用线性分类器区分不同 token 的容易程度）也更好。</li>
 <li>ResFormer（把第一层的 V 加到之后每一层，见 3a）在 82M–468M 模型上，用少 16.11% 的参数、或少 20.3% 的训练数据，达到相同的验证 loss。</li>
 </ul>
 
@@ -366,8 +350,6 @@ draft: false
 <li><a href="https://arxiv.org/abs/2512.03870">FusedKV</a></li>
 <li><a href="https://proceedings.mlr.press/v139/dong21a.html">Attention is Not All You Need: Pure Attention Loses Rank Doubly Exponentially with Depth (Dong et al., ICML 2021)</a></li>
 <li><a href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/ae0cba715b60c4052359b3d52a2cff7f-Abstract.html">Signal Propagation in Transformers: Theoretical Perspectives and the Role of Rank Collapse (Noci et al., NeurIPS 2022)</a></li>
-<li><a href="https://arxiv.org/abs/2402.17762">Massive Activations in Large Language Models (Sun et al., COLM 2024)</a></li>
-<li><a href="https://arxiv.org/abs/2510.06477">Attention Sinks and Compression Valleys in LLMs are Two Sides of the Same Coin (Queipo-de-Llano et al., 2025)</a></li>
 <li><a href="https://arxiv.org/abs/2403.17887">The Unreasonable Ineffectiveness of the Deeper Layers (Gromov et al., 2024)</a></li>
 <li><a href="https://arxiv.org/html/2607.24653v2">Kimi K3 tech report</a></li>
 <li><a href="https://huggingface.co/moonshotai/Kimi-K3">Kimi K3 model card</a></li>

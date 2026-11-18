@@ -24,7 +24,7 @@ After the first round of ICLR 2027 reviews, the variable-width transformer (Wu e
 
 ### 1a. The problem: under standard residuals, deep layers can hardly get shallow representations back
 
-<p>Standard residuals (each layer adds its output directly back to the residual stream) let every layer read only one thing: the equal-weight sum of all earlier layers' outputs. Shallow-layer information is still in this sum, but it gets buried, averaged and compressed, and there is no way to retrieve it on its own. There are four concrete problems.</p>
+<p>Standard residuals (each layer adds its output directly back to the residual stream) let every layer read only one thing: the equal-weight sum of all earlier layers' outputs. Shallow-layer information is still in this sum, but it gets buried, averaged and compressed, and there is no way to retrieve it on its own. There are three concrete problems.</p>
 
 <p><strong>uniform aggregation</strong>. Unroll the residual: let v_0 be the embedding, f_j the transform of layer j (an attention or MLP sublayer), v_j its output, and α_{j→ℓ} the weight of layer j's output in layer ℓ's input h_ℓ. Layer ℓ reads:</p>
 
@@ -69,27 +69,11 @@ After the first round of ICLR 2027 reviews, the variable-width transformer (Wu e
 
 <p>Real models do not collapse to rank 1: the same paper points out that skip connections and MLPs prevent this degeneration. So representation collapse is a tendency, not an endpoint; Noci et al. (NeurIPS 2022) further show that once token representations are highly aligned, the gradients of Q and K tend to vanish.</p>
 
-<p><strong>compression valley</strong>. The matrix entropy of intermediate-layer representations drops sharply and then rises again, forming a "valley". Matrix entropy is defined as follows: normalize the squared singular values σ_k of the representation matrix X into a distribution p_k and take its entropy; the lower the entropy, the more the representation is concentrated in a few directions:</p>
-
-<div class="post-equation"><img src="/assets/posts/representation-pump/equation-09.png" alt="p_k = σ_k² / Σ_i σ_i², H = −Σ_k p_k log p_k" width="243" height="53" loading="lazy" decoding="async"></div>
-
-<p>&gt;&lt;former (the Variable-Width Transformer, narrow in the middle and wide at both ends, see 2c) also observes this on its constant-width baseline (a standard Transformer whose layers all have the same width). Queipo-de-Llano et al. (2025) trace it and the attention sink (a few tokens, usually BOS, absorbing most of the attention weight) to the same cause: massive activations in the residual stream, i.e. a handful of activations about 100,000 times larger than the rest whose values barely depend on the input (Sun et al., COLM 2024). When the BOS token (the special token at the start of a sequence) has a huge activation norm in intermediate layers, the compression valley and the attention sink appear together; the paper proves that massive activations necessarily cause representation compression, with experiments on models from 410M to 120B. Intuitively: let M be the norm of the BOS row of the representation matrix X and R the sum of the squared norms of the other rows; with σ_1 the largest singular value and ‖X‖_F the Frobenius norm (the square root of the sum of squared entries):</p>
-
-<div class="post-equation"><img src="/assets/posts/representation-pump/equation-10.png" alt="σ_1² ≥ M², Σ_k σ_k² = ‖X‖_F² = M² + R" width="270" height="44" loading="lazy" decoding="async"></div>
-
-<p>So the share of the largest singular value satisfies:</p>
-
-<div class="post-equation"><img src="/assets/posts/representation-pump/equation-11.png" alt="p_1 = σ_1² / Σ_k σ_k² ≥ M² / (M² + R)" width="167" height="51" loading="lazy" decoding="async"></div>
-
-<p>When the BOS activation norm is far larger than the other rows, the singular-value distribution concentrates in one direction and the matrix entropy goes to 0:</p>
-
-<div class="post-equation"><img src="/assets/posts/representation-pump/equation-12.png" alt="M² ≫ R ⇒ p_1 → 1, H → 0" width="231" height="30" loading="lazy" decoding="async"></div>
-
 <p>The shared consequence of these problems is that deep layers are under-used: AttnRes cites the empirical result that a substantial fraction of layers can be pruned with almost no loss in performance (Gromov et al., 2024). And once a representation is diluted, it is hard to recompute from the current state: in the &gt;&lt;former ablation, training a projection layer (a learnable matrix mapping the narrow representation back to the wide dimension) to restore dimensions when layers widen again gives a loss of 3.150, worse even than the constant-width baseline (3.138). My reading is that the only way to get shallow representations back is to go back to the source.</p>
 
 ### 1b. Why representation pump helps
 
-<p>What the two pumps share is that deep layers bypass the accumulated sum and read shallow-layer representations directly; they differ in whose representations are read (the current token's own, or earlier tokens') and where they enter (the residual stream, or the attention K/V). Here is how they ease the first three problems in 1a:</p>
+<p>What the two pumps share is that deep layers bypass the accumulated sum and read shallow-layer representations directly; they differ in whose representations are read (the current token's own, or earlier tokens') and where they enter (the residual stream, or the attention K/V). Here is how they ease the three problems in 1a:</p>
 
 <div class="post-table" tabindex="0" role="region" aria-label="Table">
 <table><thead>
@@ -106,7 +90,7 @@ After the first round of ICLR 2027 reviews, the variable-width transformer (Wu e
 <ul>
 <li>In the &gt;&lt;former ablation, there are two ways to fill in dimensions when layers widen again: zero padding (new coordinates set to 0) and carry-forward (copy each coordinate unchanged from the last layer that processed it). The two have exactly the same shape and differ only in whether shallow-layer values are kept: loss 3.124 vs 3.099.</li>
 <li>AttnRes (retrieves earlier layers' outputs with attention, see 2a): training analysis on a 48B model shows it eases PreNorm dilution: output magnitudes stay bounded along depth and gradient norms are spread more evenly across layers.</li>
-<li>LIMe (each attention head takes K/V from all earlier layers, see 3b) keeps higher value entropy in deep layers (the matrix entropy of the value matrix, defined in 1a), and deep-layer values are also more linearly separable (easier for a linear classifier to tell different tokens apart).</li>
+<li>LIMe (each attention head takes K/V from all earlier layers, see 3b) keeps higher value entropy in deep layers (the matrix entropy of the value matrix), and deep-layer values are also more linearly separable (easier for a linear classifier to tell different tokens apart).</li>
 <li>ResFormer (adds the first layer's V to every later layer, see 3a) reaches the same validation loss with 16.11% fewer parameters or 20.3% less training data on 82M–468M models.</li>
 </ul>
 
@@ -369,8 +353,6 @@ After the first round of ICLR 2027 reviews, the variable-width transformer (Wu e
 <li><a href="https://arxiv.org/abs/2512.03870">FusedKV</a></li>
 <li><a href="https://proceedings.mlr.press/v139/dong21a.html">Attention is Not All You Need: Pure Attention Loses Rank Doubly Exponentially with Depth (Dong et al., ICML 2021)</a></li>
 <li><a href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/ae0cba715b60c4052359b3d52a2cff7f-Abstract.html">Signal Propagation in Transformers: Theoretical Perspectives and the Role of Rank Collapse (Noci et al., NeurIPS 2022)</a></li>
-<li><a href="https://arxiv.org/abs/2402.17762">Massive Activations in Large Language Models (Sun et al., COLM 2024)</a></li>
-<li><a href="https://arxiv.org/abs/2510.06477">Attention Sinks and Compression Valleys in LLMs are Two Sides of the Same Coin (Queipo-de-Llano et al., 2025)</a></li>
 <li><a href="https://arxiv.org/abs/2403.17887">The Unreasonable Ineffectiveness of the Deeper Layers (Gromov et al., 2024)</a></li>
 <li><a href="https://arxiv.org/html/2607.24653v2">Kimi K3 tech report</a></li>
 <li><a href="https://huggingface.co/moonshotai/Kimi-K3">Kimi K3 model card</a></li>
