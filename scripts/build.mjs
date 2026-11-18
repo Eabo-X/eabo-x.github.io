@@ -21,6 +21,7 @@ const icons = {
 };
 const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
 const chevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+const globe = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg>';
 const languageIcon = `<svg class="language-toggle-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
   <g class="language-card-zh">
     <rect x="9.5" y="8" width="12.5" height="13.5" rx="1.8" fill="var(--language-card-fill)"/>
@@ -348,6 +349,10 @@ function postPage(config, logo, assetURLs, post, edition = post) {
   const language = isChinese ? 'zh-Hans' : 'en';
   const navLanguage = isChinese ? ` lang="${escape(siteLanguage)}"` : '';
   const alternates = post.zh ? readingAlternates(post.zh.route, post.route) : [];
+  const alternate = alternates.find((edition) => edition.language !== language);
+  const switchLink = alternate
+    ? `<a class="article-language" data-reading-language-toggle href="${escape(alternate.route)}" hreflang="${escape(alternate.language)}" lang="${escape(alternate.language)}"><span>${globe}${isChinese ? 'Read in English' : '阅读中文版'}</span></a>`
+    : '';
   const inEnglish = Boolean(post.zh) && !isChinese;
   const indexRoute = isPublication ? publicationRoute : blogRoute;
   const metaRoute = isPublication ? publicationRoute : categoryRoute(post.category);
@@ -372,6 +377,7 @@ function postPage(config, logo, assetURLs, post, edition = post) {
             <div class="post-meta"><a href="${inEnglish ? englishRoute(metaRoute) : metaRoute}" ${readingLinkAttributes(metaRoute)}${navLanguage}>${isPublication ? 'Publication' : post.category}</a><span aria-hidden="true">·</span><time datetime="${post.date}">${escape(dateLabel)}</time></div>
             <h1>${escape(edition.title)}</h1>
             ${edition.description ? `<p class="page-description">${escape(edition.description)}</p>` : ''}
+            ${switchLink}
           </header>
           ${toc ? `<details class="post-toc-mobile"><summary>${tocLabel}${chevron}</summary><nav class="post-toc" data-post-toc aria-label="${tocLabel}">${toc}</nav></details>` : ''}
           <div class="article-body prose">${edition.html}</div>

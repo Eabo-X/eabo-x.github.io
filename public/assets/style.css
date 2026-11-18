@@ -211,6 +211,11 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
 .post-meta a { text-decoration: underline; text-decoration-color: var(--link-line); text-underline-offset: 4px; }
 .post-meta a:hover { color: var(--accent); }
 .article-header h1 { font-family: var(--blog-serif); font-size: 28px; font-weight: 400; letter-spacing: -.25px; line-height: 1.4; margin: 12px 0 0; overflow-wrap: anywhere; }
+.article-language { display: inline-flex; align-items: center; min-height: 44px; margin-top: 14px; color: var(--accent); font-size: 14px; font-weight: 600; }
+.article-language > span { display: flex; align-items: center; gap: 7px; padding: 6px 12px; border: 1px solid var(--link-line); border-radius: 999px; background: var(--paper); }
+.article-language svg { width: 15px; height: 15px; flex: none; }
+.article-language:hover > span { border-color: currentColor; }
+.article-language:lang(zh-Hans) { font-family: var(--chinese-serif); }
 :is(.blog-page, .publication-page, .post-page):lang(zh-Hans) { --blog-serif: var(--chinese-serif); }
 .post-page:lang(zh-Hans) .article-body { line-height: 1.85; }
 .post-page:lang(zh-Hans) .article-header h1, .post-page:lang(zh-Hans) .article-body [data-post-section] { letter-spacing: 0; }

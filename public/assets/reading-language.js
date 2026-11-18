@@ -1,6 +1,6 @@
 const storageKey = 'eabo-reading-language';
-const toggle = document.querySelector('[data-reading-language-toggle]');
-const alternate = toggle.getAttribute('href');
+const toggles = document.querySelectorAll('[data-reading-language-toggle]');
+const alternate = toggles[0].getAttribute('href');
 const pageLanguage = alternate ? document.documentElement.lang : null;
 const readingLinks = document.querySelectorAll('[data-reading-en-href]');
 const readingText = document.querySelectorAll('[data-reading-en-text]');
@@ -29,14 +29,16 @@ function syncReadingLanguage() {
     element.textContent = inEnglish ? element.dataset.readingEnText : element.dataset.readingZhText;
   }
 
-  if (alternate) {
-    toggle.href = alternateUrl();
-  } else {
-    const label = `Switch reading language to ${inEnglish ? 'Chinese' : 'English'}`;
-    toggle.dataset.readingLanguage = inEnglish ? 'en' : 'zh-Hans';
-    toggle.setAttribute('aria-label', label);
-    toggle.title = label;
-    toggle.hidden = false;
+  for (const toggle of toggles) {
+    if (alternate) {
+      toggle.href = alternateUrl();
+    } else {
+      const label = `Switch reading language to ${inEnglish ? 'Chinese' : 'English'}`;
+      toggle.dataset.readingLanguage = inEnglish ? 'en' : 'zh-Hans';
+      toggle.setAttribute('aria-label', label);
+      toggle.title = label;
+      toggle.hidden = false;
+    }
   }
 }
 
@@ -52,20 +54,22 @@ const usingHistory = performance.getEntriesByType('navigation')[0]?.type === 'ba
 if (defaultChineseRoute && preference === 'en' && !usingHistory) {
   location.replace(alternateUrl());
 } else {
-  toggle.addEventListener('click', () => {
-    preference = (pageLanguage ?? preference) === 'en' ? 'zh-Hans' : 'en';
-    try {
-      localStorage.setItem(storageKey, preference);
-    } catch {
-      // Language links still work when browser storage is unavailable.
-    }
-    if (!alternate) syncReadingLanguage();
-  });
+  for (const toggle of toggles) {
+    toggle.addEventListener('click', () => {
+      preference = (pageLanguage ?? preference) === 'en' ? 'zh-Hans' : 'en';
+      try {
+        localStorage.setItem(storageKey, preference);
+      } catch {
+        // Language links still work when browser storage is unavailable.
+      }
+      if (!alternate) syncReadingLanguage();
+    });
+  }
 
   window.addEventListener('pageshow', refreshPreference);
   window.addEventListener('storage', (event) => {
     if (event.key === storageKey) refreshPreference();
   });
-  if (alternate) window.addEventListener('hashchange', () => { toggle.href = alternateUrl(); });
+  if (alternate) window.addEventListener('hashchange', syncReadingLanguage);
   syncReadingLanguage();
 }
