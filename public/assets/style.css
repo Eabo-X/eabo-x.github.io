@@ -237,6 +237,9 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
 .post-toc-mobile .post-toc a { display: flex; align-items: center; min-height: 38px; padding-block: 7px; }
 .article-body { max-width: 650px; font-size: 17px; line-height: 1.65; }
 [data-post-section] { scroll-margin-top: 28px; }
+.reference-entry { scroll-margin-top: 28px; }
+.reference-entry:target { background: var(--code-block); outline: 1px solid var(--line); outline-offset: 5px; border-radius: 3px; }
+.prose .reference-link { text-decoration-style: dotted; }
 .article-comments { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line); }
 .article-comments-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 12px; }
 .article-comments-heading h2 { margin: 0; font-size: 22px; font-weight: 600; }

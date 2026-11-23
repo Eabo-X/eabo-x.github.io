@@ -114,3 +114,5 @@ Bet on first principles, hold a long-term vision, and let the bottom create whil
 - [张小珺 Jùn｜商业访谈录 113：和杨植麟时隔1年的对话：K2、Agentic LLM、缸中之脑和“站在无限的开端”（2025）](https://www.xiaoyuzhoufm.com/episode/68ae86d18ce45d46d49c4d50)
 - [张小珺 Jùn｜商业访谈录 138：对罗福莉3.5小时访谈：AI范式已然巨变！OpenClaw、Agent范式很吃后训练、卡的分配、组织平权（2026）](https://www.xiaoyuzhoufm.com/episode/69eae15a1e94ae692107cc50)
 - [张小珺 Jùn｜商业访谈录 140：对姚顺宇的4小时访谈：请允许我小疯一下！在Anthropic和Gemini训模型、技术预测、英雄主义已过去（2026）](https://www.xiaoyuzhoufm.com/episode/6a00aa051b7bd50295dfe41d)
+- [Kimi K2.5](https://www.kimi.com/blog/kimi-k2-5)
+- [Kimi k1.5](https://arxiv.org/abs/2501.12599)

@@ -128,3 +128,10 @@ AI 让个人能完成更多事情，也使许多做法更容易扩散。
 假如我花一个下午读代码，只用当天交付了多少东西来衡量，很快就会失去耐心。这个下午的 reward 稀疏而且延迟，它的价值往往几个月后才显现，到那时也很难说清是哪一个下午起了作用。但如果那几个小时让我能够预测一次改动的后果、发现一个值得追问的问题，我愿意为它留出时间。
 
 等模型再次变强，我会重新判断这件事还值不值得做。环境在变，reward 也在变，今天合理的选择，明天未必还合理。我希望自己始终有能力解释这个选择，也愿意在新的经历面前改变答案。
+
+## References
+
+- [Stanford Digital Economy Lab](https://digitaleconomy.stanford.edu/news/canariesaug26/)
+- [Investment in Human Capital: A Theoretical Analysis (Becker, 1962)](https://www.journals.uchicago.edu/doi/10.1086/258724)
+- [Mercor](https://www.mercor.com/apex/off-the-shelf-data/)
+- [anthropic.com](https://www.anthropic.com/research/AI-assistance-coding-skills)

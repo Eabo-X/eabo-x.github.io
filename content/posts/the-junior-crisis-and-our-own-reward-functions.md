@@ -3,6 +3,10 @@ title: "The Junior Crisis and Our Own Reward Functions"
 date: "2026-02"
 category: "reflection"
 draft: false
+citationAliases:
+  斯坦福数字经济实验室: https://digitaleconomy.stanford.edu/news/canariesaug26/
+  Becker: https://www.journals.uchicago.edu/doi/10.1086/258724
+  Anthropic: https://www.anthropic.com/research/AI-assistance-coding-skills
 ---
 
 If AI can already set up a training script for me, why am I still willing to spend an afternoon tracing how a batch becomes a loss, and how that loss then changes the model’s parameters?
@@ -130,3 +134,10 @@ Individuals also need to keep checking their own reward functions. A failed expe
 If I measured an afternoon of reading code only by how much I shipped that day, I would quickly lose patience. The reward from that afternoon is sparse and delayed; its value often shows up months later, and by then it’s hard to say which afternoon made the difference. But if those hours let me predict the consequences of a change or find a question worth pursuing, I’m willing to make time for them.
 
 When models get stronger again, I will reassess whether this is still worth doing. The environment changes, and so does the reward; a choice that makes sense today may not make sense tomorrow. I hope I will always be able to explain the choice, and be willing to change my answer in the face of new experience.
+
+## References
+
+- [Stanford Digital Economy Lab](https://digitaleconomy.stanford.edu/news/canariesaug26/)
+- [Investment in Human Capital: A Theoretical Analysis (Becker, 1962)](https://www.journals.uchicago.edu/doi/10.1086/258724)
+- [Mercor](https://www.mercor.com/apex/off-the-shelf-data/)
+- [anthropic.com](https://www.anthropic.com/research/AI-assistance-coding-skills)

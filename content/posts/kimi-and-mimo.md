@@ -4,6 +4,20 @@ date: "2026-11-16"
 category: "reflection"
 layout: "essay"
 draft: false
+citationAliases:
+  Luo Fuli: https://www.xiaoyuzhoufm.com/episode/69eae15a1e94ae692107cc50
+  罗福莉: https://www.xiaoyuzhoufm.com/episode/69eae15a1e94ae692107cc50
+  Yao Shunyu: https://www.xiaoyuzhoufm.com/episode/6a00aa051b7bd50295dfe41d
+  姚顺宇: https://www.xiaoyuzhoufm.com/episode/6a00aa051b7bd50295dfe41d
+  "2024, Yang Zhilin": https://www.xiaoyuzhoufm.com/episode/65e16b5b6144a933b1d968b5
+  "that 2024 interview": https://www.xiaoyuzhoufm.com/episode/65e16b5b6144a933b1d968b5
+  "Yang Zhilin's judgment from 2024": https://www.xiaoyuzhoufm.com/episode/65e16b5b6144a933b1d968b5
+  杨植麟在 2024 年那次访谈: https://www.xiaoyuzhoufm.com/episode/65e16b5b6144a933b1d968b5
+  2024 年，杨植麟: https://www.xiaoyuzhoufm.com/episode/65e16b5b6144a933b1d968b5
+  杨植麟 2024 年的判断: https://www.xiaoyuzhoufm.com/episode/65e16b5b6144a933b1d968b5
+  "in 2025": https://www.xiaoyuzhoufm.com/episode/68ae86d18ce45d46d49c4d50
+  2025 年他又说: https://www.xiaoyuzhoufm.com/episode/68ae86d18ce45d46d49c4d50
+  2025 年再和张小珺聊的时候: https://www.xiaoyuzhoufm.com/episode/68ae86d18ce45d46d49c4d50
 ---
 
 In my scattered free time lately, I went back to Zhang Xiaojun's podcast and re-listened to her interviews with the leaders of Kimi and MiMo (my two favorite pretraining teams): Yang Zhilin, founder of Moonshot AI, the team behind Kimi, and Luo Fuli, who leads Xiaomi's MiMo team. I also listened to her interview with Yao Shunyu, formerly at Anthropic and now a researcher at Google DeepMind. The two leaders expressed the same bet. What surprised me was that as early as January 2024, Yang Zhilin already had a clear direction for his "moonshot": long ctx, scaling on a general model, AI4AI, agent, and so on. These later grew into the hot spots we all know now: Harness, RSI, the 1M context window. Luo Fuli also described how in early 2026, after OpenClaw, she quickly moved pre-training from the chat paradigm to the agent paradigm, betting on agent frameworks and large models iterating on each other -> likewise catching what now looks like the right direction, Harness & RSI. The MiMo technical report shows that before post-training, Xiaomi's base model already had a better starting point on agent benchmarks than other models, and a higher potential ceiling.
@@ -117,3 +131,5 @@ Bet on first principles, hold a long-term vision, and let the bottom create whil
 - [Zhang Xiaojun Podcast Ep. 113: Yang Zhilin One Year Later: K2, Agentic LLMs, the Brain in a Vat, and "The Beginning of Infinity" (2025)](https://www.xiaoyuzhoufm.com/episode/68ae86d18ce45d46d49c4d50)
 - [Zhang Xiaojun Podcast Ep. 138: A 3.5-Hour Interview with Luo Fuli: The AI Paradigm Has Shifted! OpenClaw, Why the Agent Paradigm Leans on Post-training, Compute Allocation, Organizational Equality (2026)](https://www.xiaoyuzhoufm.com/episode/69eae15a1e94ae692107cc50)
 - [Zhang Xiaojun Podcast Ep. 140: A 4-Hour Interview with Yao Shunyu: Let Me Go a Little Crazy! Training Models at Anthropic and Gemini, Tech Predictions, the Age of Heroes Is Over (2026)](https://www.xiaoyuzhoufm.com/episode/6a00aa051b7bd50295dfe41d)
+- [Kimi K2.5](https://www.kimi.com/blog/kimi-k2-5)
+- [Kimi k1.5](https://arxiv.org/abs/2501.12599)

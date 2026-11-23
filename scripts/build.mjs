@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { Marked, marked } from 'marked';
 import matter from 'gray-matter';
 import { ensureBlogDiscussions } from './blog-discussions.mjs';
+import { linkBlogReferences } from './blog-references.mjs';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 export const output = path.join(root, 'dist');
@@ -201,7 +202,7 @@ function inlineText(tokens) {
   }).join('');
 }
 
-function renderBlogMarkdown(content, file, originalSections = null) {
+function renderBlogMarkdown(content, file, originalSections = null, citationAliases = {}) {
   const ids = new Map();
   const parser = new Marked({ renderer: {
     heading(token) {
@@ -227,12 +228,12 @@ function renderBlogMarkdown(content, file, originalSections = null) {
     ids.set(token, id);
     return { id, label, depth: token.depth };
   });
-  return { html: parser.parser(tokens), sections };
+  return { html: linkBlogReferences(parser.parser(tokens), citationAliases, file), sections };
 }
 
-function renderPostContent(content, file, category, originalSections = null) {
+function renderPostContent(content, file, category, originalSections = null, citationAliases = {}) {
   if (category === 'paper') return { html: marked.parse(content), sections: [] };
-  return renderBlogMarkdown(content, file, originalSections);
+  return renderBlogMarkdown(content, file, originalSections, citationAliases);
 }
 
 function renderToc(sections) {
@@ -263,7 +264,7 @@ async function loadChinesePost(folder, file, post) {
   return {
     title: data.title, description: data.description || '', summary: data.description || postExcerpt(content, '阅读全文。'),
     route: post.route,
-    ...renderPostContent(content, `zh/${file}`, post.category, post.sections),
+    ...renderPostContent(content, `zh/${file}`, post.category, post.sections, { ...post.citationAliases, ...data.citationAliases }),
   };
 }
 
@@ -288,9 +289,10 @@ async function loadPosts() {
     const post = {
       title: data.title, description: data.description || '', date, category,
       layout: data.layout,
+      citationAliases: data.citationAliases || {},
       summary: data.description || postExcerpt(content),
       slug, route: `${category === 'paper' ? publicationRoute : blogRoute}${slug}/`,
-      ...renderPostContent(content, file, category),
+      ...renderPostContent(content, file, category, null, data.citationAliases),
     };
     post.zh = await loadChinesePost(folder, file, post);
     if (post.zh) post.route = englishRoute(post.route);

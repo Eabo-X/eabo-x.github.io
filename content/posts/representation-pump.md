@@ -4,6 +4,28 @@ date: "2026-11-18"
 category: "tech"
 layout: "essay"
 draft: false
+citationAliases:
+  AttnRes: https://arxiv.org/pdf/2603.15031
+  Full AttnRes: https://arxiv.org/pdf/2603.15031
+  Block AttnRes: https://arxiv.org/pdf/2603.15031
+  attention residual: https://arxiv.org/pdf/2603.15031
+  variable-width transformer: https://arxiv.org/abs/2606.18246
+  "><former": https://arxiv.org/abs/2606.18246
+  HC: https://arxiv.org/abs/2409.19606
+  MUDD: https://arxiv.org/abs/2502.12170
+  DCA: https://arxiv.org/abs/2502.06785
+  Gated Residual: https://arxiv.org/pdf/2608.30320
+  Kimi K3: https://arxiv.org/html/2607.24653v2
+  DeepSeek-V4: https://arxiv.org/pdf/2606.19348
+  GLM-5.3-Flash: https://sebastianraschka.com/blog/2026/glm-5-3-flash-architecture-notes.html
+  Qwen3.8-Flash-Next: https://arxiv.org/pdf/2608.30320
+  Mistral Large 4: https://www.alphaxiv.org/abs/2611.mistral-large-4
+  Kimi Team: https://arxiv.org/pdf/2603.15031
+  Xie et al.: https://arxiv.org/html/2512.24880v2
+  Xie 等: https://arxiv.org/html/2512.24880v2
+  Lin et al.: https://arxiv.org/abs/2512.03870
+  Lin 等: https://arxiv.org/abs/2512.03870
+  Reconstructing KV Caches with Cross-layer Fusion For Enhanced Transformers: https://arxiv.org/abs/2512.03870
 ---
 
 After the first round of ICLR 2027 reviews, the variable-width transformer (Wu et al., 2026), which received initial scores of 4/4/3, caught my attention. More than its variable width, I was drawn to how it carries hidden states from shallow layers to deep layers. This reminded me of Kimi's Attention Residuals from earlier this year, which also connects hidden states across layers, and of DeepSeek's mHC, a method that maintains multiple hidden-state streams. So I took a detailed look at current approaches that let deep layers use information from shallow layers, split into two parts: hidden state and KV.
