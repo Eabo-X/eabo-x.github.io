@@ -6,7 +6,7 @@
     "result": "Kaggle · Silver Medal · Rank 39/3677",
     "description": "An XGBoost and LightGBM ensemble for predicting daily S&P 500 excess returns and translating forecasts into index allocations.",
     "repository": "https://github.com/Eabo-X/Hull-Tactical-Market-Prediction-Silver-Medal",
-    "repositoryPrivate": true,
-    "competition": "https://www.kaggle.com/competitions/hull-tactical-market-prediction"
+    "repositoryPrivate": false,
+    "competition": "https://www.kaggle.com/competitions/hull-tactical-market-prediction/overview"
   }
 ]
