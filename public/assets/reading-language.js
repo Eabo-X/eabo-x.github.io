@@ -4,11 +4,12 @@ const alternate = toggles[0].getAttribute('href');
 const pageLanguage = alternate ? document.documentElement.lang : null;
 const readingLinks = document.querySelectorAll('[data-reading-en-href]');
 const readingText = document.querySelectorAll('[data-reading-en-text]');
-let preference = storedLanguage() ?? 'zh-Hans';
+let preference = storedLanguage() ?? pageLanguage ?? 'zh-Hans';
 
 function storedLanguage() {
   try {
-    return localStorage.getItem(storageKey) === 'en' ? 'en' : 'zh-Hans';
+    const language = localStorage.getItem(storageKey);
+    return language === 'en' || language === 'zh-Hans' ? language : null;
   } catch {
     return null;
   }
@@ -19,7 +20,11 @@ function alternateUrl() {
 }
 
 function syncReadingLanguage() {
-  const language = pageLanguage ?? preference;
+  if (pageLanguage && pageLanguage !== preference) {
+    location.replace(alternateUrl());
+    return;
+  }
+  const language = preference;
   const inEnglish = language === 'en';
   for (const link of readingLinks) {
     link.href = inEnglish ? link.dataset.readingEnHref : link.dataset.readingZhHref;
@@ -47,29 +52,29 @@ function refreshPreference() {
   syncReadingLanguage();
 }
 
-const canonical = document.querySelector('link[rel="canonical"]').href;
-const defaultChineseRoute = pageLanguage === 'zh-Hans' && location.pathname === new URL(canonical).pathname;
-const usingHistory = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
-
-if (defaultChineseRoute && preference === 'en' && !usingHistory) {
-  location.replace(alternateUrl());
-} else {
-  for (const toggle of toggles) {
-    toggle.addEventListener('click', () => {
-      preference = (pageLanguage ?? preference) === 'en' ? 'zh-Hans' : 'en';
-      try {
-        localStorage.setItem(storageKey, preference);
-      } catch {
-        // Language links still work when browser storage is unavailable.
-      }
-      if (!alternate) syncReadingLanguage();
-    });
+function savePreference(language) {
+  preference = language;
+  try {
+    localStorage.setItem(storageKey, preference);
+  } catch {
+    // Language links still work when browser storage is unavailable.
   }
-
-  window.addEventListener('pageshow', refreshPreference);
-  window.addEventListener('storage', (event) => {
-    if (event.key === storageKey) refreshPreference();
-  });
-  if (alternate) window.addEventListener('hashchange', syncReadingLanguage);
-  syncReadingLanguage();
 }
+
+for (const toggle of toggles) {
+  toggle.addEventListener('click', () => {
+    savePreference(preference === 'en' ? 'zh-Hans' : 'en');
+    if (!alternate) syncReadingLanguage();
+  });
+}
+
+window.addEventListener('pageshow', refreshPreference);
+window.addEventListener('storage', (event) => {
+  if (event.key === storageKey || event.key === null) refreshPreference();
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshPreference();
+});
+if (alternate) window.addEventListener('hashchange', syncReadingLanguage);
+savePreference(preference);
+syncReadingLanguage();
