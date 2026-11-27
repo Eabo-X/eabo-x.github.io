@@ -7,6 +7,10 @@
     "description": "An XGBoost and LightGBM ensemble for predicting daily S&P 500 excess returns and translating forecasts into index allocations.",
     "repository": "https://github.com/Eabo-X/Hull-Tactical-Market-Prediction-Silver-Medal",
     "repositoryPrivate": false,
-    "competition": "https://www.kaggle.com/competitions/hull-tactical-market-prediction/overview"
+    "competition": "https://www.kaggle.com/competitions/hull-tactical-market-prediction/overview",
+    "zh": {
+      "result": "Kaggle · 银牌 · 排名 39/3677",
+      "description": "使用 XGBoost 和 LightGBM 集成模型预测标普 500 指数的每日超额收益，并将预测转换为指数仓位。"
+    }
   }
 ]

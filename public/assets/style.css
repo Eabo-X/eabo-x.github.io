@@ -231,7 +231,7 @@ a.social-link:hover { color: var(--accent); transform: translateY(-2px); }
 .article-language svg { width: 15px; height: 15px; flex: none; }
 .article-language:hover > span { border-color: currentColor; }
 .article-language:lang(zh-Hans) { font-family: var(--chinese-serif); }
-:is(.blog-page, .publication-page, .post-page):lang(zh-Hans) { --blog-serif: var(--chinese-serif); }
+:is(.blog-page, .publication-page, .project-page, .post-page):lang(zh-Hans) { --blog-serif: var(--chinese-serif); }
 .post-page:lang(zh-Hans) .article-body { line-height: 1.85; }
 .post-page:lang(zh-Hans) .article-header h1, .post-page:lang(zh-Hans) .article-body [data-post-section] { letter-spacing: 0; }
 .post-toc-desktop { display: none; }

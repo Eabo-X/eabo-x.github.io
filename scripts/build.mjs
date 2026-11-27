@@ -39,6 +39,7 @@ const projectRoute = '/project/';
 const englishRoute = (route) => `/en${route}`;
 const englishBlogRoute = englishRoute(blogRoute);
 const englishPublicationRoute = englishRoute(publicationRoute);
+const englishProjectRoute = englishRoute(projectRoute);
 const blogCategories = ['tech', 'reflection'];
 const categoryRoute = (category, indexRoute = blogRoute) => `${indexRoute}category/${category}/`;
 
@@ -136,7 +137,7 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
           <a href="/"${active === 'about' ? ' aria-current="page"' : ''}>About me</a>
           <a href="${inEnglish ? englishBlogRoute : blogRoute}" ${readingLinkAttributes(blogRoute)}${active === 'blog' ? ' aria-current="page"' : ''}>Blog</a>
           <a href="${inEnglish ? englishPublicationRoute : publicationRoute}" ${readingLinkAttributes(publicationRoute)}${active === 'publication' ? ' aria-current="page"' : ''}>Publication</a>
-          <a href="${projectRoute}"${active === 'project' ? ' aria-current="page"' : ''}>Project</a>
+          <a href="${inEnglish ? englishProjectRoute : projectRoute}" ${readingLinkAttributes(projectRoute)}${active === 'project' ? ' aria-current="page"' : ''}>Project</a>
         </nav>
       </div>
     </header>
@@ -479,30 +480,39 @@ export async function buildSite({ quiet = false, discussionToken } = {}) {
   }
   pages.set(`${categoryRoute('paper').slice(1)}index.html`, redirectPage(config, publicationRoute, 'Publication'));
 
-  pages.set(`${projectRoute.slice(1)}index.html`, shell(config, logo, assetURLs, {
-    title: `Project — ${config.name}`, route: projectRoute, active: 'project', pageClass: 'project-page',
-    description: `Projects by ${config.name}.`,
-    body: `<h1 class="sr-only" id="project-title">Project</h1>
-      <section class="project-list" aria-labelledby="project-title">${projects.map((project) => `
-        <article class="project-entry">
+  const projectAlternates = readingAlternates(projectRoute);
+  for (const { language, route } of projectAlternates) {
+    const isChinese = language === 'zh-Hans';
+    pages.set(`${route.slice(1)}index.html`, shell(config, logo, assetURLs, {
+      title: `Project — ${config.name}`, route, language, alternates: projectAlternates,
+      active: 'project', pageClass: 'project-page',
+      description: isChinese ? `${config.name} 的项目。` : `Projects by ${config.name}.`,
+      body: `<h1 class="sr-only" id="project-title" lang="${escape(siteLanguage)}">Project</h1>
+      <section class="project-list" aria-labelledby="project-title">${projects.map((project) => {
+        const edition = isChinese ? project.zh ?? project : project;
+        const editionLanguage = edition === project.zh ? 'zh-Hans' : 'en';
+        return `
+        <article class="project-entry" lang="${editionLanguage}">
           <a class="project-cover" href="${escape(project.repository)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escape(project.title)} on GitHub">
             <img src="${escape(project.cover)}" alt="${escape(project.title)} cover" width="560" height="280" loading="lazy" decoding="async">
           </a>
           <div class="project-details">
-            <h2><a href="${escape(project.repository)}" target="_blank" rel="noopener noreferrer">${escape(project.title)}</a></h2>
+            <h2><a href="${escape(project.repository)}" target="_blank" rel="noopener noreferrer">${escape(edition.title || project.title)}</a></h2>
             <div class="project-meta">
-              <time datetime="${project.date}">${escape(formatDate(project.date, 'en-US', 'short'))}</time>
-              <p class="project-result">${escape(project.result)}</p>
+              <time datetime="${project.date}">${escape(formatDate(project.date, editionLanguage === 'zh-Hans' ? 'zh-CN' : 'en-US', 'short'))}</time>
+              <p class="project-result">${escape(edition.result || project.result)}</p>
             </div>
-            <p class="project-description">${escape(project.description)}</p>
+            <p class="project-description">${escape(edition.description || project.description)}</p>
             <div class="project-links">
               <a href="${escape(project.repository)}" target="_blank" rel="noopener noreferrer">GitHub${project.repositoryPrivate ? ' (private)' : ''}</a>
-              <a href="${escape(project.competition)}" target="_blank" rel="noopener noreferrer">Competition</a>
+              <a href="${escape(project.competition)}" target="_blank" rel="noopener noreferrer">${editionLanguage === 'zh-Hans' ? '比赛主页' : 'Competition'}</a>
             </div>
           </div>
-        </article>`).join('')}
+        </article>`;
+      }).join('')}
       </section>`,
-  }));
+    }));
+  }
 
   for (const post of posts) {
     pages.set(`${post.route.slice(1)}index.html`, postPage(config, logo, assetURLs, post));
@@ -547,7 +557,8 @@ export async function buildSite({ quiet = false, discussionToken } = {}) {
   pages.set('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${new URL('/sitemap.xml', config.url).href}\n`);
   const postRoutes = posts.flatMap((post) => post.zh ? [post.route, post.zh.route] : [post.route]);
   const publicationIndexRoutes = publicationAlternates.map(({ route }) => route);
-  pages.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', ...blogIndexRoutes, ...publicationIndexRoutes, projectRoute, '/contact/', ...postRoutes].map((route) => `<url><loc>${escape(new URL(route, config.url).href)}</loc></url>`).join('')}</urlset>\n`);
+  const projectIndexRoutes = projectAlternates.map(({ route }) => route);
+  pages.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', ...blogIndexRoutes, ...publicationIndexRoutes, ...projectIndexRoutes, '/contact/', ...postRoutes].map((route) => `<url><loc>${escape(new URL(route, config.url).href)}</loc></url>`).join('')}</urlset>\n`);
 
   // All content is rendered before replacing dist, so invalid posts fail the build early.
   await rm(output, { recursive: true, force: true });
