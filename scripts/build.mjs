@@ -35,6 +35,7 @@ const languageIcon = `<svg class="language-toggle-icon" viewBox="0 0 24 24" stro
 </svg>`;
 const blogRoute = '/blog/';
 const publicationRoute = '/publication/';
+const projectRoute = '/project/';
 const englishRoute = (route) => `/en${route}`;
 const englishBlogRoute = englishRoute(blogRoute);
 const englishPublicationRoute = englishRoute(publicationRoute);
@@ -135,6 +136,7 @@ function shell(config, logo, assetURLs, { title, description, route = '/', activ
           <a href="/"${active === 'about' ? ' aria-current="page"' : ''}>About me</a>
           <a href="${inEnglish ? englishBlogRoute : blogRoute}" ${readingLinkAttributes(blogRoute)}${active === 'blog' ? ' aria-current="page"' : ''}>Blog</a>
           <a href="${inEnglish ? englishPublicationRoute : publicationRoute}" ${readingLinkAttributes(publicationRoute)}${active === 'publication' ? ' aria-current="page"' : ''}>Publication</a>
+          <a href="${projectRoute}"${active === 'project' ? ' aria-current="page"' : ''}>Project</a>
         </nav>
       </div>
     </header>
@@ -405,6 +407,9 @@ export async function buildSite({ quiet = false, discussionToken } = {}) {
   const logo = (await readFile(path.join(root, 'public/assets/eabo-x-logo.svg'), 'utf8')).trim()
     .replace(/<svg\b[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="32" height="32" aria-hidden="true" focusable="false" shape-rendering="geometricPrecision">');
   const about = marked.parse(await readFile(path.join(root, 'content/about.md'), 'utf8'));
+  const projects = JSON.parse(await readFile(path.join(root, 'content/projects.json'), 'utf8'))
+    .map((project) => ({ ...project, date: readPostDate(project.date, 'content/projects.json') }))
+    .sort((a, b) => b.date.localeCompare(a.date));
   const posts = await loadPosts();
   const blogPosts = posts.filter((post) => post.category !== 'paper');
   if (discussionToken) {
@@ -474,6 +479,31 @@ export async function buildSite({ quiet = false, discussionToken } = {}) {
   }
   pages.set(`${categoryRoute('paper').slice(1)}index.html`, redirectPage(config, publicationRoute, 'Publication'));
 
+  pages.set(`${projectRoute.slice(1)}index.html`, shell(config, logo, assetURLs, {
+    title: `Project — ${config.name}`, route: projectRoute, active: 'project', pageClass: 'project-page',
+    description: `Projects by ${config.name}.`,
+    body: `<h1 class="sr-only" id="project-title">Project</h1>
+      <section class="project-list" aria-labelledby="project-title">${projects.map((project) => `
+        <article class="project-entry">
+          <a class="project-cover" href="${escape(project.repository)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escape(project.title)} on GitHub">
+            <img src="${escape(project.cover)}" alt="${escape(project.title)} cover" width="560" height="280" loading="lazy" decoding="async">
+          </a>
+          <div class="project-details">
+            <h2><a href="${escape(project.repository)}" target="_blank" rel="noopener noreferrer">${escape(project.title)}</a></h2>
+            <div class="project-meta">
+              <time datetime="${project.date}">${escape(formatDate(project.date, 'en-US', 'short'))}</time>
+              <p class="project-result">${escape(project.result)}</p>
+            </div>
+            <p class="project-description">${escape(project.description)}</p>
+            <div class="project-links">
+              <a href="${escape(project.repository)}" target="_blank" rel="noopener noreferrer">GitHub${project.repositoryPrivate ? ' (private)' : ''}</a>
+              <a href="${escape(project.competition)}" target="_blank" rel="noopener noreferrer">Competition</a>
+            </div>
+          </div>
+        </article>`).join('')}
+      </section>`,
+  }));
+
   for (const post of posts) {
     pages.set(`${post.route.slice(1)}index.html`, postPage(config, logo, assetURLs, post));
     if (post.zh) {
@@ -517,7 +547,7 @@ export async function buildSite({ quiet = false, discussionToken } = {}) {
   pages.set('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${new URL('/sitemap.xml', config.url).href}\n`);
   const postRoutes = posts.flatMap((post) => post.zh ? [post.route, post.zh.route] : [post.route]);
   const publicationIndexRoutes = publicationAlternates.map(({ route }) => route);
-  pages.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', ...blogIndexRoutes, ...publicationIndexRoutes, '/contact/', ...postRoutes].map((route) => `<url><loc>${escape(new URL(route, config.url).href)}</loc></url>`).join('')}</urlset>\n`);
+  pages.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', ...blogIndexRoutes, ...publicationIndexRoutes, projectRoute, '/contact/', ...postRoutes].map((route) => `<url><loc>${escape(new URL(route, config.url).href)}</loc></url>`).join('')}</urlset>\n`);
 
   // All content is rendered before replacing dist, so invalid posts fail the build early.
   await rm(output, { recursive: true, force: true });
@@ -527,7 +557,7 @@ export async function buildSite({ quiet = false, discussionToken } = {}) {
     await mkdir(path.dirname(path.join(output, file)), { recursive: true });
     await writeFile(path.join(output, file), content);
   }
-  if (!quiet) console.log(`Built About me, Blog, and Publication (${blogPosts.length} blog posts, ${publications.length} publications) → dist/`);
+  if (!quiet) console.log(`Built About me, Blog, Publication, and Project (${blogPosts.length} blog posts, ${publications.length} publications, ${projects.length} projects) → dist/`);
   return { posts: posts.length, pages: pages.size };
 }
 
